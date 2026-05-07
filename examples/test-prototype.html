@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>proto-comments — leave feedback on prototypes, not in Slack</title>
+  <link rel="stylesheet" href="/test-prototype.css">
+</head>
+<body>
+  <div class="wrap">
+
+    <nav>
+      <a href="/test-prototype.html" class="logo">proto-comments<span class="dot">.</span></a>
+      <span class="spacer"></span>
+      <a href="/test-prototype.html">Home</a>
+      <a href="/test-prototype-about.html">About</a>
+      <a href="http://localhost:3000/login">Sign in</a>
+    </nav>
+
+    <section class="hero">
+      <h1>Feedback on prototypes, <em>without</em> the screenshot dance.</h1>
+      <p>One script tag. Your team clicks any element on a preview URL and leaves a pinned comment. You copy them as markdown into Claude Code. That's it.</p>
+      <a class="cta" href="http://localhost:3000/login">Get started →</a>
+    </section>
+
+    <section class="section" id="how">
+      <h2>How it works</h2>
+      <div class="how">
+        <div class="steps">
+          <div class="step active" data-step="01">
+            <div class="num">01</div>
+            <h3>Drop the tag</h3>
+            <p>Paste one line into your prototype's root layout. Env-gated so it never ships to production.</p>
+          </div>
+          <div class="step" data-step="02">
+            <div class="num">02</div>
+            <h3>Invite reviewers</h3>
+            <p>Enter their email. They get a magic link, click, land on the prototype already signed in.</p>
+          </div>
+          <div class="step" data-step="03">
+            <div class="num">03</div>
+            <h3>Ship feedback to Claude</h3>
+            <p>Click <em>Copy markdown</em>, paste into Claude Code. It walks the list element by element.</p>
+          </div>
+        </div>
+        <div class="panels">
+
+          <div class="panel active" data-panel="01">
+<pre class="codeblock"><span class="c">// app/layout.tsx</span>
+{process.env.<span class="t">NODE_ENV</span> !== <span class="s">'production'</span> && (
+  &lt;<span class="k">script</span>
+    src=<span class="s">"https://comments.yourteam.dev/embed.js"</span>
+    data-project=<span class="s">"checkout-v2"</span>
+    async
+  /&gt;
+)}</pre>
+          </div>
+
+          <div class="panel" data-panel="02">
+            <div class="invite-mock">
+              <div class="invite-mock-label">Invite by email</div>
+              <div class="invite-mock-input">alex@team.com<span class="caret"></span></div>
+              <div class="invite-mock-actions">
+                <button class="invite-mock-btn">Cancel</button>
+                <button class="invite-mock-btn primary">Send invite</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="03">
+            <pre class="codeblock"><span class="c"># Checkout v2 — review comments</span>
+<span class="c">**Comments:** 3 unresolved</span>
+
+<span class="t">## 1. align CTA right on mobile</span>
+- <span class="k">Page:</span> /pricing
+- <span class="k">Selector:</span> <span class="s">.cta--primary</span>
+- alex: padding looks off below 480px
+
+<span class="t">## 2. tighten hero copy</span>
+- <span class="k">Page:</span> /
+- <span class="k">Selector:</span> <span class="s">h1.hero-title</span></pre>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <script>
+      (function() {
+        const steps = document.querySelectorAll('#how .step');
+        const panels = document.querySelectorAll('#how .panel');
+        function activate(id) {
+          steps.forEach((s) => s.classList.toggle('active', s.dataset.step === id));
+          panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === id));
+        }
+        steps.forEach((s) => {
+          s.addEventListener('mouseenter', () => activate(s.dataset.step));
+          s.addEventListener('focus', () => activate(s.dataset.step));
+        });
+      })();
+    </script>
+
+    <footer>
+      <span>proto-comments</span>
+      <span style="flex:1"></span>
+      <a href="/test-prototype-about.html">About</a>
+      <a href="http://localhost:3000/login">Sign in</a>
+    </footer>
+
+  </div>
+
+  <script src="http://localhost:3000/embed.js" data-project="smoke-test" data-key="8317db3445cdc16b0765ad35" async></script>
+</body>
+</html>

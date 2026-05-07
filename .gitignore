@@ -1,0 +1,34 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# next
+.next
+out
+
+# environment
+.env*.local
+.env
+
+# misc
+.DS_Store
+*.pem
+.vercel
+.turbo
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor
+.idea
+.vscode
+
+# claude code internals
+.claude/
