@@ -587,20 +587,21 @@
     const items = list.map((c, i) => {
       const author = c.author_name || emailHandle(c.author_email);
       const isResolved = !!c.resolved_at;
+      const safeId = escapeHtml(c.id);
       return `
-        <div class="__pc_item ${isResolved ? 'resolved' : ''}" data-id="${c.id}">
+        <div class="__pc_item ${isResolved ? 'resolved' : ''}" data-id="${safeId}">
           <div class="__pc_item_meta">
             <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${i + 1}</span>
             <span class="__pc_item_author">${escapeHtml(author)}</span>
             <span>·</span>
-            <span>${relativeTime(c.created_at)}</span>
+            <span>${escapeHtml(relativeTime(c.created_at))}</span>
             <span class="__pc_panel_spacer"></span>
             <span class="__pc_item_path" title="${escapeHtml(c.page_path)}">${escapeHtml(c.page_path)}</span>
           </div>
           <div class="__pc_item_target">${escapeHtml(c.snippet)}</div>
           <div class="__pc_item_body">${escapeHtml(c.body)}</div>
           <div class="__pc_item_actions">
-            <button class="__pc_item_action" data-resolve="${c.id}">${isResolved ? 'Unresolve' : 'Resolve'}</button>
+            <button class="__pc_item_action" data-resolve="${safeId}">${isResolved ? 'Unresolve' : 'Resolve'}</button>
           </div>
         </div>
       `;
