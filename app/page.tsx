@@ -25,7 +25,7 @@ export default function HomePage() {
         <p>
           Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
           loads, your team comments, you pull the feedback into Claude Code as markdown.
-          One slash command, one script tag, no accounts.
+          One slash command, one script tag, no&nbsp;accounts.
         </p>
         <a className="lp-cta" href="#install">Install →</a>
         <a className="lp-cta-secondary" href={githubUrl}>View on GitHub</a>
