@@ -751,7 +751,7 @@
 
   function svgIcon(kind) {
     if (kind === 'minimize') return `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10"/></svg>`;
-    if (kind === 'expand') return `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h10M3 8h10M3 11h10"/></svg>`;
+    if (kind === 'expand') return `<span style="font-size:11px;font-weight:500;letter-spacing:0.01em;padding:0 4px;">+ Comment</span>`;
     return '';
   }
 
