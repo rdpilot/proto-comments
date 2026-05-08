@@ -61,27 +61,26 @@ The project name may be quoted or unquoted; treat the entire remainder of \`$ARG
    - Vite/React → \`src/main.tsx\` or \`index.html\`
    - Plain HTML → \`index.html\`
    If unsure, ask the user.
-5. Insert the returned \`script\` tag, env-gated to development:
+5. Insert the returned \`script\` tag in the right place. Choose the gate based on the project type:
 
-   **Next.js (\`app/layout.tsx\`):**
+   **Next.js / production app with a real prod release** — env-gate so it never ships to end users:
    \`\`\`tsx
    {process.env.NODE_ENV !== 'production' && (
      <script src="..." data-project="..." data-key="..." async />
    )}
    \`\`\`
 
-   **Vite (\`index.html\`):**
+   **Vite app being deployed as a prototype** — gate by DEV if there's a real prod, otherwise just include unconditionally:
    \`\`\`html
-   <script>
-     if (import.meta.env.DEV) {
-       const s = document.createElement('script');
-       s.src = '__API_BASE__/embed.js';
-       s.setAttribute('data-project', '<slug>');
-       s.setAttribute('data-key', '<embed_key>');
-       document.head.appendChild(s);
-     }
-   </script>
+   <script src="__API_BASE__/embed.js" data-project="<slug>" data-key="<embed_key>" async></script>
    \`\`\`
+
+   **Plain HTML / static prototype with no build system** — include the script tag unconditionally inside \`<head>\`:
+   \`\`\`html
+   <script src="__API_BASE__/embed.js" data-project="<slug>" data-key="<embed_key>" async></script>
+   \`\`\`
+
+   **Important rule of thumb:** if the codebase is itself a prototype (no separate "production" customer-facing build), insert the tag unconditionally. Don't gate by hostname or \`NODE_ENV\` — the deployed prototype IS the place reviewers leave comments. Only gate when the same codebase is a real product with a live customer-facing version that should NOT show the comment overlay.
 
 6. Print:
    \`\`\`
