@@ -41,15 +41,15 @@ export default function HomePage() {
 curl -o ~/.claude/commands/proto-comments.md \\
   ${origin}/skill.md`}</CopyableCode>
             <p className="muted small" style={{ marginTop: 12, marginBottom: 0 }}>
-              Restart Claude Code so it picks up the new command.
+              Requires the <code>gh</code> CLI (ships with Claude Code). Restart Claude Code so it picks up the new command.
             </p>
           </div>
           <div className="lp-step">
             <div className="num">02</div>
-            <h3>Use it in any prototype</h3>
-            <CopyableCode>{`/proto-comments new "Checkout v2"`}</CopyableCode>
+            <h3>Add it to a prototype</h3>
+            <CopyableCode>{`/proto-comments new`}</CopyableCode>
             <p className="muted small" style={{ marginTop: 12, marginBottom: 0 }}>
-              First run prompts you to install the GitHub App on a repo of your choice. Comments live there as Issues — your data, your repo.
+              Claude picks a repo from your GitHub account and installs the GitHub App if needed. Comments live there as Issues — your data, your repo.
             </p>
           </div>
         </div>
@@ -62,7 +62,7 @@ curl -o ~/.claude/commands/proto-comments.md \\
             <div className="lp-how-step active" data-step="01">
               <div className="num">01</div>
               <h3>Spin up a project</h3>
-              <p>One slash command in Claude Code creates the project and inserts the script tag into your prototype&apos;s root layout, env-gated to dev. You don&apos;t touch HTML.</p>
+              <p>One slash command in Claude Code creates the project and inserts the script tag into your prototype&apos;s root layout. You don&apos;t touch HTML.</p>
             </div>
             <div className="lp-how-step" data-step="02">
               <div className="num">02</div>
@@ -79,9 +79,9 @@ curl -o ~/.claude/commands/proto-comments.md \\
           <div className="lp-panels">
 
             <div className="lp-panel active" data-panel="01">
-              <pre className="lp-code"><span className="c">{'> '}</span><span className="k">/proto-comments</span>{` new `}<span className="s">{`"Checkout v2"`}</span>{`
+              <pre className="lp-code"><span className="c">{'> '}</span><span className="k">/proto-comments</span>{` new`}{`
 
-`}<span className="t">{'✓'}</span>{` Comments will live in `}<span className="s">you/checkout</span>{`
+`}<span className="t">{'✓'}</span>{` Comments will live in `}<span className="s">you/my-app</span>{`
 `}<span className="t">{'✓'}</span>{` Script tag added to `}<span className="s">index.html</span>{`
 
 Share your prototype URL —
@@ -100,7 +100,7 @@ reviewers don't need an account.`}</pre>
             </div>
 
             <div className="lp-panel" data-panel="03">
-              <pre className="lp-code"><span className="c"># Checkout v2 — 3 comments</span>{`
+              <pre className="lp-code"><span className="c"># My App — 3 comments</span>{`
 
 1. align CTA right on mobile — alex
    `}<span className="s">{`\`.cta--primary\``}</span>{` · /pricing
