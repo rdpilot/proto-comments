@@ -3,12 +3,13 @@
  * --------------------------------
  * Paste in your prototype:
  *   <script src="https://your-tool.vercel.app/embed.js"
- *           data-project="checkout-v2-a7f9"
- *           data-key="x9k2..."
+ *           data-repo="you/your-prototype"
+ *           data-label="proto-comments:checkout-v2"
  *           async></script>
  *
  * No accounts. Reviewers type a display name once, then click any element to comment.
- * All API calls go through the proto-comments server (no direct Supabase from browser).
+ * Comments are stored as Issues in `data-repo` with `data-label` — the proto-comments
+ * GitHub App must be installed there.
  */
 (() => {
   if (window.__protoComments) return;
@@ -16,12 +17,12 @@
   const script = document.currentScript || Array.from(document.scripts).find((s) => /embed\.js/.test(s.src));
   if (!script) { console.error('[proto-comments] could not find own script tag'); return; }
 
-  const projectSlug = script.getAttribute('data-project');
-  const embedKey = script.getAttribute('data-key');
+  const repo = script.getAttribute('data-repo');
+  const label = script.getAttribute('data-label');
   const apiBase = new URL(script.src).origin;
 
-  if (!projectSlug || !embedKey) {
-    console.error('[proto-comments] missing data-project or data-key attribute');
+  if (!repo || !label) {
+    console.error('[proto-comments] missing data-repo or data-label attribute');
     return;
   }
 
@@ -57,28 +58,28 @@
       return r.json();
     });
   }
-  function withKey(qs) {
-    return `project=${encodeURIComponent(projectSlug)}&key=${encodeURIComponent(embedKey)}${qs ? '&' + qs : ''}`;
+  function withRepoLabel(qs) {
+    return `repo=${encodeURIComponent(repo)}&label=${encodeURIComponent(label)}${qs ? '&' + qs : ''}`;
   }
   async function fetchConfig() {
-    return api(`/api/embed/config?${withKey()}`);
+    return api(`/api/embed/config?${withRepoLabel()}`);
   }
   async function postComment(payload) {
     return api(`/api/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project: projectSlug, key: embedKey, ...payload }),
+      body: JSON.stringify({ repo, label, ...payload }),
     });
   }
   async function patchComment(id, resolved) {
     return api(`/api/comments/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project: projectSlug, key: embedKey, resolved }),
+      body: JSON.stringify({ repo, label, resolved }),
     });
   }
   async function pollSince(iso) {
-    return api(`/api/comments?${withKey('since=' + encodeURIComponent(iso))}`);
+    return api(`/api/comments?${withRepoLabel('since=' + encodeURIComponent(iso))}`);
   }
 
   // ---------------------------------------------------------------------------

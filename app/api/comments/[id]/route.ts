@@ -1,52 +1,49 @@
-// PATCH  /api/comments/:id  — toggle resolve. Body: { project, key, resolved: boolean }
-// DELETE /api/comments/:id  — owner-token only. Headers: x-owner-token
+// PATCH /api/comments/:issue_number
+//   body: { repo, label, resolved: boolean }
+//   Closes (resolved=true) or reopens (resolved=false) the issue.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase';
+import { octokitForRepo, parseRepo, isValidLabel, decodeIssue } from '@/lib/github';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'invalid json' }, { status: 400 }); }
-  const { project, key, resolved } = body || {};
-  if (!project || !key) return NextResponse.json({ error: 'missing project or key' }, { status: 400 });
-  if (typeof resolved !== 'boolean') return NextResponse.json({ error: 'resolved must be boolean' }, { status: 400 });
 
-  const sb = createServiceClient();
-  const { data: proj } = await sb.from('projects').select('id, embed_key').eq('slug', project).single();
-  if (!proj || proj.embed_key !== key) return NextResponse.json({ error: 'invalid project or key' }, { status: 404 });
-
-  const { data, error } = await sb
-    .from('comments')
-    .update({ resolved_at: resolved ? new Date().toISOString() : null })
-    .eq('id', params.id)
-    .eq('project_id', proj.id)
-    .select('id, resolved_at')
-    .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
-
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const ownerToken = req.headers.get('x-owner-token');
-  if (!ownerToken) return NextResponse.json({ error: 'missing owner token' }, { status: 401 });
-
-  const sb = createServiceClient();
-
-  // join: only delete if the comment's project owner_token matches
-  const { data: row } = await sb
-    .from('comments')
-    .select('id, project_id, projects!inner(owner_token)')
-    .eq('id', params.id)
-    .single();
-
-  // @ts-expect-error – nested fk select shape
-  if (!row || row.projects.owner_token !== ownerToken) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 403 });
+  const repo = parseRepo(body?.repo);
+  const label = body?.label;
+  if (!repo || !isValidLabel(label)) {
+    return NextResponse.json({ error: 'invalid repo or label' }, { status: 400 });
+  }
+  if (typeof body.resolved !== 'boolean') {
+    return NextResponse.json({ error: 'resolved must be boolean' }, { status: 400 });
   }
 
-  const { error } = await sb.from('comments').delete().eq('id', params.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  const issueNumber = Number(params.id);
+  if (!Number.isFinite(issueNumber)) {
+    return NextResponse.json({ error: 'invalid issue number' }, { status: 400 });
+  }
+
+  const octokit = await octokitForRepo(repo.owner, repo.repo);
+  if (!octokit) {
+    return NextResponse.json({ error: 'app not installed on this repo' }, { status: 404 });
+  }
+
+  // Confirm the issue actually has the label we expect — defense against
+  // hopping to other issues in the repo.
+  const { data: issue } = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
+    owner: repo.owner, repo: repo.repo, issue_number: issueNumber,
+  });
+  if (!issue.labels.some((l: any) => (typeof l === 'string' ? l : l.name) === label)) {
+    return NextResponse.json({ error: 'issue does not belong to this project' }, { status: 403 });
+  }
+
+  const { data: updated } = await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+    owner: repo.owner, repo: repo.repo, issue_number: issueNumber,
+    state: body.resolved ? 'closed' : 'open',
+  });
+
+  const decoded = decodeIssue(updated);
+  return NextResponse.json(decoded || { id: String(issueNumber), resolved_at: body.resolved ? new Date().toISOString() : null });
 }
 
 export async function OPTIONS() {

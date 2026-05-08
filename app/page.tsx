@@ -49,7 +49,7 @@ curl -o ~/.claude/commands/proto-comments.md \\
             <h3>Use it in any prototype</h3>
             <CopyableCode>{`/proto-comments new "Checkout v2"`}</CopyableCode>
             <p className="muted small" style={{ marginTop: 12, marginBottom: 0 }}>
-              Claude inserts the script tag, saves the owner token, and you&apos;re done.
+              First run prompts you to install the GitHub App on a repo of your choice. Comments live there as Issues — your data, your repo.
             </p>
           </div>
         </div>
@@ -81,12 +81,11 @@ curl -o ~/.claude/commands/proto-comments.md \\
             <div className="lp-panel active" data-panel="01">
               <pre className="lp-code"><span className="c">{'> '}</span><span className="k">/proto-comments</span>{` new `}<span className="s">{`"Checkout v2"`}</span>{`
 
-`}<span className="t">{'✓'}</span>{` Created project `}<span className="s">{`"Checkout v2"`}</span>{` (checkout-v2-a7f9)
-`}<span className="t">{'✓'}</span>{` Script tag added to `}<span className="s">app/layout.tsx</span>{`
-`}<span className="t">{'✓'}</span>{` Owner token saved
+`}<span className="t">{'✓'}</span>{` Comments will live in `}<span className="s">you/checkout</span>{`
+`}<span className="t">{'✓'}</span>{` Script tag added to `}<span className="s">index.html</span>{`
 
-Share your prototype URL with reviewers —
-they don't need an account.`}</pre>
+Share your prototype URL —
+reviewers don't need an account.`}</pre>
             </div>
 
             <div className="lp-panel" data-panel="02">
@@ -139,8 +138,8 @@ they don't need an account.`}</pre>
             <p>Any host, any URL. Vercel, Netlify, Cloudflare, custom staging, even localhost. The script tag doesn&apos;t care where it&apos;s loaded from.</p>
           </div>
           <div className="lp-feature">
-            <h3>Your data, your DB</h3>
-            <p>Comments live in a Supabase project you own. Nothing routes through anyone else&apos;s server. Comply however you need to.</p>
+            <h3>Comments in your repo</h3>
+            <p>Every comment is a GitHub Issue with a label, in a repo you own. Versioned, searchable, exportable, deletable on your terms. Nothing stored on our servers.</p>
           </div>
           <div className="lp-feature">
             <h3>MIT, no telemetry</h3>
