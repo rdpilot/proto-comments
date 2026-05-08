@@ -20,7 +20,7 @@ export default function HomePage() {
 
       <section className="lp-hero">
         <h1>
-          Pinned comments on any preview URL, wherever your prototype lives.
+          Pinned comments on any preview URL, wherever your prototype&nbsp;lives.
         </h1>
         <p>
           Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
