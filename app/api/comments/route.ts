@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
     .map(decodeIssue)
     .filter((c): c is NonNullable<ReturnType<typeof decodeIssue>> => !!c);
 
-  return NextResponse.json({ comments });
+  return NextResponse.json({ comments }, {
+    headers: { 'Cache-Control': 'no-store, must-revalidate' },
+  });
 }
 
 export async function POST(req: NextRequest) {

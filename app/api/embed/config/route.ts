@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
   const slug = label!.replace(/^proto-comments:/, '');
   const project = { id: label, name: slug, slug };
 
-  return NextResponse.json({ project, comments });
+  return NextResponse.json({ project, comments }, {
+    headers: { 'Cache-Control': 'no-store, must-revalidate' },
+  });
 }
 
 export async function OPTIONS() {
