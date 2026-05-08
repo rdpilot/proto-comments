@@ -19,8 +19,8 @@ export default function HomePage() {
       </nav>
 
       <section className="lp-hero">
-        <h1>
-          Pinned comments on any preview URL,&nbsp;wherever your prototype&nbsp;lives.
+        <h1 style={{ textWrap: 'balance' }}>
+          Pinned comments on any preview URL, wherever your prototype lives.
         </h1>
         <p>
           Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
