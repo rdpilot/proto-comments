@@ -34,7 +34,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .lp-nav { display: flex; align-items: center; gap: 24px; padding-bottom: 64px; }
 .lp-logo { font-weight: 600; letter-spacing: -0.01em; color: var(--text); font-size: 15px; }
 .lp-logo:hover { text-decoration: none; }
-.lp-logo .dot { color: var(--accent); }
+.lp-logo .dot { color: var(--text-muted); }
 .lp-spacer { flex: 1; }
 .lp-nav a:not(.lp-logo) { color: var(--text-muted); font-size: 14px; }
 
@@ -48,10 +48,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 }
 .lp-cta {
   display: inline-flex; align-items: center; gap: 8px;
-  background: var(--accent); color: #fff; padding: 10px 18px;
+  background: #ffffff; color: #0e0e10; padding: 10px 18px;
   border-radius: 6px; font-weight: 500; font-size: 14px;
 }
-.lp-cta:hover { background: var(--accent-hover); text-decoration: none; }
+.lp-cta:hover { background: #e6e6e6; text-decoration: none; }
 .lp-cta-secondary {
   display: inline-flex; align-items: center; gap: 6px;
   color: var(--text); border: 1px solid var(--border);
@@ -72,7 +72,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
   border-radius: 8px; padding: 20px;
 }
 .lp-step .num {
-  color: var(--accent); font-size: 12px; font-weight: 600;
+  color: var(--text); font-size: 12px; font-weight: 600;
   letter-spacing: 0.08em; margin-bottom: 6px;
 }
 .lp-step h3 { font-size: 15px; margin: 0 0 12px; font-weight: 500; }
@@ -109,7 +109,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .lp-how-step:first-child { border-top: none; padding-top: 0; }
 .lp-how-step.active, .lp-how-step:hover { opacity: 1; }
 .lp-how-step .num {
-  color: var(--accent); font-size: 12px; font-weight: 600;
+  color: var(--text); font-size: 12px; font-weight: 600;
   letter-spacing: 0.08em; margin-bottom: 4px;
 }
 .lp-how-step h3 { font-size: 15px; margin: 0 0 4px; font-weight: 500; }
@@ -149,7 +149,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
   font-size: 12px; font-family: inherit; cursor: pointer;
 }
 .lp-name-mock-btn.primary {
-  background: var(--accent); color: #fff; border-color: var(--accent);
+  background: #ffffff; color: #0e0e10; border-color: #ffffff;
 }
 
 .lp-comment-mock {

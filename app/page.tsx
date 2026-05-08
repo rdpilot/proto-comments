@@ -22,12 +22,12 @@ export default function HomePage() {
         <h1>
           Pinned comments on any preview URL,
           <br />
-          <em>not just Vercel&apos;s.</em>
+          wherever your prototype lives.
         </h1>
         <p>
-          Works on Vercel, Netlify, Cloudflare Pages, localhost, custom staging domains —
-          anywhere your prototype lives. One slash command to spin up a project, one script tag,
-          and reviewers don&apos;t need accounts.
+          Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
+          loads, your team comments, you pull the feedback into Claude Code as markdown.
+          One slash command, one script tag, no accounts.
         </p>
         <a className="lp-cta" href="#install">Install →</a>
         <a className="lp-cta-secondary" href={githubUrl}>View on GitHub</a>
@@ -69,8 +69,8 @@ curl -o ~/.claude/commands/proto-comments.md \\
             </div>
             <div className="lp-how-step" data-step="02">
               <div className="num">02</div>
-              <h3>Share the URL</h3>
-              <p>Reviewers open the prototype, type a name once, click any element to leave a pinned comment. No accounts.</p>
+              <h3>Comment on anything</h3>
+              <p>Reviewers click any element to pin a comment to it. Pins stick to the DOM, so feedback stays attached even as the prototype changes. No accounts, no inbox round-trips.</p>
             </div>
             <div className="lp-how-step" data-step="03">
               <div className="num">03</div>
