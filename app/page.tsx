@@ -47,8 +47,7 @@ curl -o ~/.claude/commands/proto-comments.md \\
           <div className="lp-step">
             <div className="num">02</div>
             <h3>Use it in any prototype</h3>
-            <CopyableCode>{`/proto-comments new "Checkout v2"
-/proto-comments fetch`}</CopyableCode>
+            <CopyableCode>{`/proto-comments new "Checkout v2"`}</CopyableCode>
             <p className="muted small" style={{ marginTop: 12, marginBottom: 0 }}>
               Claude inserts the script tag, saves the owner token, and you&apos;re done.
             </p>
