@@ -131,7 +131,7 @@ If \`slug\` is omitted, look at \`~/.proto-comments/projects.json\`. If exactly 
    # <project name> — N comments
 
    1. <body> — <author_name>
-      \`<selector>\` · <page_path> · #<issue_number>
+      \`<selector>\` · \`<page_path>\` · #<issue_number>
 
    2. ...
    \`\`\`
