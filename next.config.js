@@ -20,6 +20,15 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
+      {
+        // Comment read/write endpoints — embed.js issues POST/PATCH from any origin
+        source: '/api/comments/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+        ],
+      },
     ];
   },
 };

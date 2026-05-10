@@ -40,7 +40,7 @@
 
   try {
     const saved = JSON.parse(localStorage.getItem('__pc_panel_pos') || 'null');
-    if (saved && typeof saved.left === 'number') state.panelPos = saved;
+    if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') state.panelPos = saved;
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
     state.authorName = localStorage.getItem('__pc_name') || '';
@@ -393,7 +393,8 @@
   let outlineEl, panelEl, popoverEl, authEl;
 
   function ensureOutline() {
-    if (!outlineEl) {
+    // Re-create if SPA wiped <body> and detached our node (rare but possible).
+    if (!outlineEl || !document.body.contains(outlineEl)) {
       outlineEl = document.createElement('div');
       outlineEl.className = '__pc_outline';
       outlineEl.style.display = 'none';
@@ -468,8 +469,8 @@
       pin.className = '__pc_pin' + (c.resolved_at ? ' resolved' : '');
       pin.style.left = r.left + window.scrollX + 'px';
       pin.style.top = r.top + window.scrollY + 'px';
-      pin.innerHTML = `<span>${i + 1}</span>`;
-      pin.title = `${emailHandle(c.author_email)}: ${c.body}`;
+      pin.innerHTML = `<span>${c.id}</span>`;
+      pin.title = `${c.author_name || 'anonymous'}: ${c.body}`;
       pin.addEventListener('click', (e) => {
         e.stopPropagation();
         showOutline(el);
@@ -586,13 +587,13 @@
     const unresolved = state.comments.filter((c) => !c.resolved_at).length;
 
     const items = list.map((c, i) => {
-      const author = c.author_name || emailHandle(c.author_email);
+      const author = c.author_name || 'anonymous';
       const isResolved = !!c.resolved_at;
       const safeId = escapeHtml(c.id);
       return `
         <div class="__pc_item ${isResolved ? 'resolved' : ''}" data-id="${safeId}">
           <div class="__pc_item_meta">
-            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${i + 1}</span>
+            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${escapeHtml(c.id)}</span>
             <span class="__pc_item_author">${escapeHtml(author)}</span>
             <span>·</span>
             <span>${escapeHtml(relativeTime(c.created_at))}</span>
@@ -929,9 +930,12 @@
       if (inFlight) return;
       if (document.hidden) return;
       inFlight = true;
+      // Capture next-poll timestamp BEFORE issuing the request so any
+      // comment created during the round-trip is still picked up next poll.
+      const nextPoll = new Date().toISOString();
       try {
         const { comments: fresh } = await pollSince(lastPoll);
-        lastPoll = new Date().toISOString();
+        lastPoll = nextPoll;
         if (fresh && fresh.length) {
           fresh.forEach((c) => upsertComment(c));
           renderAll();

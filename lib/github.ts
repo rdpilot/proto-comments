@@ -59,6 +59,10 @@ export type CommentFields = {
   author_name: string;
 };
 
+// Sentinel marker for the trailing footer — unique enough that user bodies
+// containing markdown horizontal rules (---) don't collide.
+const FOOTER_SENTINEL = '<!-- proto-comments:footer -->';
+
 export function encodeIssueBody(c: CommentFields): string {
   const meta = [
     '<!-- proto-comments:meta',
@@ -71,7 +75,7 @@ export function encodeIssueBody(c: CommentFields): string {
     }),
     '-->',
   ].join('\n');
-  return `${meta}\n\n${c.body}\n\n---\n\n_${escapeMd(c.author_name)} on \`${escapeMd(c.page_path)}\` — \`${escapeMd(c.selector)}\`_`;
+  return `${meta}\n\n${c.body}\n\n${FOOTER_SENTINEL}\n\n---\n_${escapeMd(c.author_name)} on \`${escapeMd(c.page_path)}\` — \`${escapeMd(c.selector)}\`_`;
 }
 
 export function decodeIssue(issue: { number: number; body?: string | null; title: string; state: string; created_at: string; closed_at?: string | null }): CommentFields & { id: string; number: number; resolved_at: string | null; created_at: string } | null {
@@ -80,9 +84,12 @@ export function decodeIssue(issue: { number: number; body?: string | null; title
   if (!m) return null;
   let meta: any;
   try { meta = JSON.parse(m[1]); } catch { return null; }
-  // The user-facing body is between the closing `-->` and the trailing `---` separator.
+  // The user-facing body is between the closing `-->` of the meta block and
+  // the sentinel marker. Falls back to legacy `\n\n---\n\n` for issues
+  // created before the sentinel was introduced.
   const after = body.slice(m.index! + m[0].length);
-  const sepIdx = after.lastIndexOf('\n\n---\n\n');
+  let sepIdx = after.indexOf(FOOTER_SENTINEL);
+  if (sepIdx < 0) sepIdx = after.lastIndexOf('\n\n---\n\n');
   const userBody = (sepIdx >= 0 ? after.slice(0, sepIdx) : after).trim();
   return {
     id: String(issue.number),

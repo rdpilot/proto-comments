@@ -88,23 +88,40 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const fields = {
-    page_path: body.page_path.slice(0, 256),
-    selector: body.selector.slice(0, 1024),
-    dom_path: body.dom_path.slice(0, 512),
-    snippet: body.snippet.slice(0, 512),
-    body: body.body.slice(0, 4000),
-    author_name: body.author_name.slice(0, 64),
-  };
-  const title = (fields.body.split('\n')[0] || 'Comment').slice(0, 80);
+  // Unicode-aware truncation — String.slice splits surrogate pairs, which
+  // breaks emoji and non-BMP characters at the boundary.
+  const truncate = (s: string, n: number) => Array.from(s).slice(0, n).join('');
 
-  const created = await octokit.request('POST /repos/{owner}/{repo}/issues', {
-    owner: repo.owner,
-    repo: repo.repo,
-    title,
-    body: encodeIssueBody(fields),
-    labels: [label],
-  });
+  const fields = {
+    page_path: truncate(body.page_path, 256),
+    selector: truncate(body.selector, 1024),
+    dom_path: truncate(body.dom_path, 512),
+    snippet: truncate(body.snippet, 512),
+    body: truncate(body.body, 4000),
+    author_name: truncate(body.author_name, 64),
+  };
+  const firstLine = fields.body.split('\n').find((l) => l.trim()) || 'Comment';
+  const title = truncate(firstLine.trim(), 80);
+
+  let created;
+  try {
+    created = await octokit.request('POST /repos/{owner}/{repo}/issues', {
+      owner: repo.owner,
+      repo: repo.repo,
+      title,
+      body: encodeIssueBody(fields),
+      labels: [label],
+    });
+  } catch (e: any) {
+    if (e.status === 403 || e.status === 422) {
+      return NextResponse.json({
+        error: 'failed to create issue',
+        detail: e.message,
+        hint: 'The GitHub App may be missing "Issues: Write" permission, or the label was not created. Verify App permissions and re-install.',
+      }, { status: e.status });
+    }
+    throw e;
+  }
 
   const decoded = decodeIssue(created.data);
   if (!decoded) {
