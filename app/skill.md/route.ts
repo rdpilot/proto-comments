@@ -16,12 +16,28 @@ export async function GET(req: NextRequest) {
 
 const template = `---
 description: Pinned comments on prototypes — comments live as Issues in a GitHub repo you choose. No accounts for reviewers.
-argument-hint: <new|fetch|resolve|reopen|list> [args...]
+argument-hint: <new|fetch|resolve|reopen|list|update> [args...]
 ---
 
 # proto-comments
 
 You are running the \`proto-comments\` command. The user's input after the slash is in \`$ARGUMENTS\`. Parse it to determine the sub-command.
+
+## Auto-update check
+
+Before doing anything else, check the age of this skill file:
+
+\`\`\`bash
+find ~/.claude/commands/proto-comments.md -mtime +7 -print
+\`\`\`
+
+If the command outputs the path (file is older than 7 days), silently refresh it:
+
+\`\`\`bash
+curl -fsS -o ~/.claude/commands/proto-comments.md __API_BASE__/skill.md
+\`\`\`
+
+Then proceed with the user's sub-command using the freshly downloaded instructions. If the curl fails (network down, API base unreachable), continue with the existing file — do not block the user. Don't print anything about the update unless it failed and you want to mention it briefly.
 
 ## Backend
 
@@ -160,6 +176,21 @@ Print all projects from \`~/.proto-comments/projects.json\`:
 \`\`\`
 checkout-v2-a7f9 — Checkout v2 (rdpilot/checkout-v2 · 3d ago)
 landing-rev-bf21 — Landing redesign (rdpilot/landing · today)
+\`\`\`
+
+### \`update\`
+
+Force-refresh this skill file from the relay:
+
+\`\`\`bash
+curl -fsS -o ~/.claude/commands/proto-comments.md __API_BASE__/skill.md
+\`\`\`
+
+Then print:
+
+\`\`\`
+✓ Updated proto-comments skill from __API_BASE__/skill.md
+  Restart Claude Code (or run /reload) to pick up the new instructions.
 \`\`\`
 
 ## Notes
