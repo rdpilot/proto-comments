@@ -20,12 +20,12 @@ export default function HomePage() {
 
       <section className="lp-hero">
         <h1 style={{ textWrap: 'balance' }}>
-          Pinned comments on any preview URL, wherever your prototype lives.
+          Comment on any prototype URL.<br />
+          Turn feedback into something your AI agent can act on.
         </h1>
         <p>
-          Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
-          loads, your team comments, you pull the feedback into Claude Code as markdown.
-          One slash command, one script tag, no&nbsp;accounts.
+          Send your live prototype to your team. Collect their feedback. Hand it
+          to your AI agent and ship the&nbsp;fixes.
         </p>
         <a className="lp-cta" href="#install">Install →</a>
         <a className="lp-cta-secondary" href={githubUrl}>View on GitHub</a>
@@ -61,18 +61,18 @@ curl -o ~/.claude/commands/proto-comments.md \\
           <div>
             <div className="lp-how-step active" data-step="01">
               <div className="num">01</div>
-              <h3>Spin up a project</h3>
-              <p>One slash command in Claude Code creates the project and inserts the script tag into your prototype&apos;s root layout. You don&apos;t touch HTML.</p>
+              <h3>Add it to any prototype</h3>
+              <p>One slash command in Claude Code drops the comment overlay onto your prototype. No HTML to edit, no environment variables to configure.</p>
             </div>
             <div className="lp-how-step" data-step="02">
               <div className="num">02</div>
-              <h3>Comment on anything</h3>
-              <p>Reviewers click any element to pin a comment to it. Pins stick to the DOM, so feedback stays attached even as the prototype changes. No accounts, no inbox round-trips.</p>
+              <h3>Send the URL to your team</h3>
+              <p>Designers, PMs, clients, friends — anyone you share the URL with can click any element to leave feedback. No sign-up, no inbox round-trips.</p>
             </div>
             <div className="lp-how-step" data-step="03">
               <div className="num">03</div>
-              <h3>Pull as markdown</h3>
-              <p><code className="kbd">/proto-comments fetch</code> drops every unresolved comment into Claude&apos;s context. Apply, resolve, repeat.</p>
+              <h3>Let your AI ship the fixes</h3>
+              <p>Run <code className="kbd">/proto-comments fetch</code>. Your AI agent reads everything reviewers said and applies the changes.</p>
             </div>
           </div>
 
