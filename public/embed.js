@@ -289,6 +289,13 @@
     .__pc_item + .__pc_item { margin-top: 2px; }
     .__pc_item.resolved { opacity: 0.55; }
     .__pc_item.resolved .__pc_item_body { text-decoration: line-through; text-decoration-color: #5a5a62; }
+    .__pc_item.__pc_highlight {
+      animation: __pc_pulse 1.6s ease-out;
+    }
+    @keyframes __pc_pulse {
+      0%   { background: rgba(94, 106, 210, 0.4); border-color: #5e6ad2; }
+      100% { background: transparent; border-color: transparent; }
+    }
 
     .__pc_item_meta {
       display: flex; align-items: center; gap: 6px;
@@ -513,7 +520,14 @@
       pin.addEventListener('click', (e) => {
         e.stopPropagation();
         showOutline(el);
-        setTimeout(hideOutline, 1000);
+        setTimeout(hideOutline, 1500);
+        // Open the panel if minimized, then highlight the matching comment row.
+        if (state.panelMinimized) {
+          state.panelMinimized = false;
+          try { localStorage.setItem('__pc_panel_min', '0'); } catch (_) {}
+          renderPanel();
+        }
+        highlightCommentItem(c.id);
       });
       document.body.appendChild(pin);
     });
@@ -689,6 +703,20 @@
     panelEl.querySelectorAll('[data-resolve]').forEach((b) => b.addEventListener('click', () => toggleResolve(b.getAttribute('data-resolve'))));
     panelEl.querySelector('[data-action="copy"]')?.addEventListener('click', copyMarkdown);
     panelEl.querySelector('[data-action="rename"]').addEventListener('click', () => promptName(true));
+  }
+
+  // Scroll the matching panel item into view and pulse it briefly.
+  // Triggered when user clicks a pin to find the corresponding comment.
+  function highlightCommentItem(id) {
+    // Wait one frame so the panel has finished re-rendering after expand.
+    requestAnimationFrame(() => {
+      if (!panelEl) return;
+      const item = panelEl.querySelector(`[data-id="${CSS.escape(String(id))}"]`);
+      if (!item) return;
+      item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      item.classList.add('__pc_highlight');
+      setTimeout(() => item.classList.remove('__pc_highlight'), 1600);
+    });
   }
 
   function jumpToComment(id) {
