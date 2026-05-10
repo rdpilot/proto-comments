@@ -709,12 +709,15 @@
       panelEl.style.left = left + 'px';
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
+      panelEl.style.bottom = 'auto';
     } else {
-      // Default: top-right. Always reset on refresh — saved positions are
-      // intentionally not restored (see localStorage load logic).
+      // Default: bottom-right with breathing room. Avoids colliding with
+      // top nav bars and feels like an intentional review widget rather
+      // than something stuck to the corner. Always reset on refresh.
       panelEl.style.left = 'auto';
-      panelEl.style.right = '16px';
-      panelEl.style.top = '16px';
+      panelEl.style.right = '24px';
+      panelEl.style.top = 'auto';
+      panelEl.style.bottom = '24px';
     }
   }
 
