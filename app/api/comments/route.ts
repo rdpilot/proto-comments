@@ -5,6 +5,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { octokitForRepo, parseRepo, isValidLabel, encodeIssueBody, decodeIssue } from '@/lib/github';
 
+// In-memory rate limiter — per (repo+IP) per minute. Coarse but stops trivial
+// abuse without requiring KV/Redis. Resets on cold start which is fine for a
+// stateless relay.
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_PER_MINUTE = 30; // 30 comments / minute / (repo+IP)
+
+function checkRateLimit(key: string): { ok: true } | { ok: false; retryAfter: number } {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || bucket.resetAt < now) {
+    rateBuckets.set(key, { count: 1, resetAt: now + 60_000 });
+    return { ok: true };
+  }
+  if (bucket.count >= RATE_LIMIT_PER_MINUTE) {
+    return { ok: false, retryAfter: Math.ceil((bucket.resetAt - now) / 1000) };
+  }
+  bucket.count++;
+  return { ok: true };
+}
+
+// Lightweight Origin/Referer check — blocks `curl` and other non-browser
+// callers. Real browsers always send one of the two on cross-origin requests.
+function hasBrowserOrigin(req: NextRequest): boolean {
+  return !!(req.headers.get('origin') || req.headers.get('referer'));
+}
+
 export async function GET(req: NextRequest) {
   const repoStr = req.nextUrl.searchParams.get('repo');
   const label = req.nextUrl.searchParams.get('label');
@@ -34,6 +60,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!hasBrowserOrigin(req)) {
+    return NextResponse.json({ error: 'requests must come from a browser' }, { status: 403 });
+  }
+
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'invalid json' }, { status: 400 }); }
 
@@ -41,6 +71,15 @@ export async function POST(req: NextRequest) {
   const label = body?.label;
   if (!repo || !isValidLabel(label)) {
     return NextResponse.json({ error: 'invalid repo or label' }, { status: 400 });
+  }
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+  const rl = checkRateLimit(`${repo.owner}/${repo.repo}|${ip}`);
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'rate limit exceeded', retry_after_seconds: rl.retryAfter }, {
+      status: 429,
+      headers: { 'Retry-After': String(rl.retryAfter) },
+    });
   }
 
   const required = ['page_path', 'selector', 'dom_path', 'snippet', 'body', 'author_name'];

@@ -138,8 +138,34 @@
     return `<${el.tagName.toLowerCase()}>`;
   }
 
-  function emailHandle(email) {
-    return (email || '').split('@')[0] || 'anonymous';
+  // Resolve a comment to a DOM element, with progressive fallback so pins
+  // survive class-name churn between deploys (CSS Modules, styled-components,
+  // Tailwind JIT, etc.). Returns null if nothing plausible matches.
+  function resolveElement(c) {
+    // 1. Exact selector — fastest path, works most of the time.
+    try {
+      const el = document.querySelector(c.selector);
+      if (el) return el;
+    } catch (_) { /* invalid selector */ }
+
+    // 2. Snippet text match — find an element whose visible text matches
+    //    the captured snippet. Scoped to a candidate set keyed off the
+    //    last segment of dom_path (tag name) to avoid scanning the whole DOM.
+    if (c.snippet && c.dom_path) {
+      const lastSeg = c.dom_path.split('>').pop()?.trim() || '';
+      const tag = lastSeg.replace(/[#.].*$/, '').toLowerCase();
+      if (tag) {
+        const target = c.snippet.replace(/\.\.\.$/, '').trim();
+        const candidates = document.getElementsByTagName(tag);
+        for (let i = 0; i < candidates.length; i++) {
+          const text = (candidates[i].innerText || candidates[i].textContent || '').trim().replace(/\s+/g, ' ');
+          if (text === target || (target && text.startsWith(target))) {
+            return candidates[i];
+          }
+        }
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------------------
@@ -458,11 +484,11 @@
   function renderPins() {
     document.querySelectorAll('.__pc_pin').forEach((p) => p.remove());
     const filtered = filteredComments();
-    filtered.forEach((c, i) => {
+    const frag = document.createDocumentFragment();
+    filtered.forEach((c) => {
       // Only render pins for comments on the current page
       if (c.page_path !== location.pathname) return;
-      let el = null;
-      try { el = document.querySelector(c.selector); } catch (_) {}
+      const el = resolveElement(c);
       if (!el) return;
       const r = el.getBoundingClientRect();
       const pin = document.createElement('div');
@@ -476,8 +502,9 @@
         showOutline(el);
         setTimeout(hideOutline, 1000);
       });
-      document.body.appendChild(pin);
+      frag.appendChild(pin);
     });
+    document.body.appendChild(frag);
   }
 
   // ---------------------------------------------------------------------------
@@ -662,8 +689,7 @@
       location.href = url.toString();
       return;
     }
-    let el = null;
-    try { el = document.querySelector(c.selector); } catch (_) {}
+    const el = resolveElement(c);
     if (!el) { toast('Element not found on this page anymore'); return; }
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showOutline(el);
@@ -867,7 +893,17 @@
     if (e.key === 'Escape' && popoverEl) closePopover();
   }
 
-  function onScrollOrResize() { renderPins(); }
+  // rAF-throttle so heavy scroll/resize doesn't trigger renderPins (and its
+  // many querySelectors) on every event.
+  let rafQueued = false;
+  function onScrollOrResize() {
+    if (rafQueued) return;
+    rafQueued = true;
+    requestAnimationFrame(() => {
+      rafQueued = false;
+      renderPins();
+    });
+  }
 
   // SPA route changes: re-render pins/panel when the path changes without a full reload.
   // We patch history.pushState/replaceState to fire a custom event, and also listen for popstate.
@@ -926,9 +962,10 @@
   function startPolling() {
     let lastPoll = new Date().toISOString();
     let inFlight = false;
-    setInterval(async () => {
-      if (inFlight) return;
-      if (document.hidden) return;
+    let timer = null;
+
+    async function tick() {
+      if (inFlight || document.hidden) return;
       inFlight = true;
       // Capture next-poll timestamp BEFORE issuing the request so any
       // comment created during the round-trip is still picked up next poll.
@@ -942,7 +979,18 @@
         }
       } catch (_) { /* ignore */ }
       inFlight = false;
-    }, 5000);
+    }
+
+    timer = setInterval(tick, 5000);
+    // Catch up immediately when the tab becomes visible again (after long backgrounding).
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) tick();
+    });
+    // Stop polling on pagehide so the script doesn't accumulate on
+    // bfcache restores.
+    window.addEventListener('pagehide', () => {
+      if (timer) { clearInterval(timer); timer = null; }
+    });
   }
 
   window.__protoComments = { state, boot };

@@ -1,11 +1,16 @@
 // PATCH /api/comments/:issue_number
 //   body: { repo, label, resolved: boolean }
-//   Closes (resolved=true) or reopens (resolved=false) the issue.
+//   Closes (resolved=true) or reopens (resolved=false) the issue. Requires
+//   browser Origin/Referer header (blocks scripted abuse).
 
 import { NextRequest, NextResponse } from 'next/server';
 import { octokitForRepo, parseRepo, isValidLabel, decodeIssue } from '@/lib/github';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  if (!req.headers.get('origin') && !req.headers.get('referer')) {
+    return NextResponse.json({ error: 'requests must come from a browser' }, { status: 403 });
+  }
+
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'invalid json' }, { status: 400 }); }
 

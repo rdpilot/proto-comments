@@ -43,9 +43,10 @@ export function parseRepo(input: string | null | undefined): { owner: string; re
 }
 
 // Validate label shape — must start with our prefix to scope app access.
+// Slug must start with an alphanumeric to avoid leading-dot oddities.
 export function isValidLabel(label: string | null | undefined): boolean {
   if (!label) return false;
-  return /^proto-comments:[\w.-]{1,64}$/.test(label);
+  return /^proto-comments:[a-zA-Z0-9][\w.-]{0,63}$/.test(label);
 }
 
 // Encode/decode comment metadata in the issue body. The body is markdown that
