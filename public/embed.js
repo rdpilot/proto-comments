@@ -48,16 +48,9 @@
   }
 
   try {
-    const saved = JSON.parse(localStorage.getItem('__pc_panel_pos') || 'null');
-    // Reject saved positions that would put the panel mostly off-screen.
-    if (saved && typeof saved.left === 'number' && typeof saved.top === 'number'
-        && saved.left >= 0 && saved.top >= 0
-        && saved.left < window.innerWidth - 40
-        && saved.top < window.innerHeight - 20) {
-      state.panelPos = saved;
-    } else if (saved) {
-      try { localStorage.removeItem('__pc_panel_pos'); } catch (_) {}
-    }
+    // Drag position is intentionally NOT restored from localStorage —
+    // every page load starts the panel at the top-right default. Users can
+    // drag it within a session, but a refresh always brings it back.
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
     state.authorName = localStorage.getItem('__pc_name') || '';
@@ -714,10 +707,11 @@
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
     } else {
-      // Default: bottom-center. Visible without colliding with site nav/CTAs.
-      panelEl.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
-      panelEl.style.top = Math.max(8, window.innerHeight - h - 24) + 'px';
-      panelEl.style.right = 'auto';
+      // Default: top-right. Always reset on refresh — saved positions are
+      // intentionally not restored (see localStorage load logic).
+      panelEl.style.left = 'auto';
+      panelEl.style.right = '16px';
+      panelEl.style.top = '16px';
     }
   }
 
