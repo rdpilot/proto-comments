@@ -196,6 +196,7 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02);
       display: flex; flex-direction: column;
       overflow: hidden;
+      resize: none;
     }
     .__pc_panel.minimized {
       width: auto; height: auto; max-height: none;
@@ -711,13 +712,13 @@
       panelEl.style.right = 'auto';
       panelEl.style.bottom = 'auto';
     } else {
-      // Default: bottom-right with breathing room. Avoids colliding with
-      // top nav bars and feels like an intentional review widget rather
-      // than something stuck to the corner. Always reset on refresh.
+      // Default: top-right with breathing room. Anchored to TOP so when
+      // the user clicks to expand, the panel grows downward — not upward
+      // (which produced a stretched-tall panel when anchored to bottom).
       panelEl.style.left = 'auto';
       panelEl.style.right = '24px';
-      panelEl.style.top = 'auto';
-      panelEl.style.bottom = '24px';
+      panelEl.style.top = '24px';
+      panelEl.style.bottom = 'auto';
     }
   }
 
