@@ -70,6 +70,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .lp-step {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 8px; padding: 20px;
+  /* min-width:0 so a long code line doesn't expand the grid track and
+     break equal-width columns. */
+  min-width: 0;
 }
 .lp-step .num {
   color: var(--text); font-size: 12px; font-weight: 600;
