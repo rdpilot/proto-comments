@@ -515,8 +515,8 @@
       pin.className = '__pc_pin' + (c.resolved_at ? ' resolved' : '');
       pin.style.left = r.left + window.scrollX + 'px';
       pin.style.top = r.top + window.scrollY + 'px';
-      pin.innerHTML = `<span>${i + 1}</span>`;
-      pin.title = `${emailHandle(c.author_email)}: ${c.body}`;
+      pin.innerHTML = `<span>${c.id}</span>`;
+      pin.title = `${c.author_name || 'anonymous'}: ${c.body}`;
       pin.addEventListener('click', (e) => {
         e.stopPropagation();
         showOutline(el);
@@ -646,7 +646,7 @@
       return `
         <div class="__pc_item ${isResolved ? 'resolved' : ''}" data-id="${safeId}">
           <div class="__pc_item_meta">
-            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${i + 1}</span>
+            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${escapeHtml(c.id)}</span>
             <span class="__pc_item_author">${escapeHtml(author)}</span>
             <span>·</span>
             <span>${escapeHtml(relativeTime(c.created_at))}</span>
