@@ -161,6 +161,13 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
     - If no script but the project has a \`gh-pages\` dependency + \`scripts.build\`, the command is \`npm run build && npx gh-pages -d <out-dir>\` (out-dir from \`vite.config\` \`build.outDir\`, default \`dist\`).
     - For **Vercel/Netlify/Cloudflare Pages** projects with auto-deploy on push (presence of \`.vercel/\`, \`netlify.toml\`, or \`wrangler.toml\` with Pages config), the command is just \`git add -A && git commit -m "add proto-comments script" && git push\`.
     - For **GitHub Pages serving from main branch root** (\`gh api repos/<prototype_repo>/pages -q .source.branch 2>/dev/null\` returns \`main\` with path \`/\`), same as above: commit + push.
+    - **For a brand-new repo with no Pages config yet** (the Pages API returns 404 and there's no other deploy target detected), enable Pages first, then push:
+      \`\`\`bash
+      gh api -X POST repos/<prototype_repo>/pages \\
+        -f "source[branch]=main" -f "source[path]=/" 2>&1 || true
+      git add -A && git commit -m "add proto-comments script" && git push
+      \`\`\`
+      The \`|| true\` swallows "already exists" if Pages was just enabled in another tab. After enabling, the predicted URL \`https://<owner>.github.io/<repo>/\` will be live in ~1-2 minutes (slightly slower for the first build).
     - If you genuinely cannot determine a deploy command, ask the user once:
       \`\`\`
       I couldn't figure out how to deploy this. What command do you usually run?
