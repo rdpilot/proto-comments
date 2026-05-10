@@ -125,9 +125,15 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    )}
    \`\`\`
 
-7. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
+7. **Identify the prototype's own repo (NOT the comments repo).** The repo picked in step 2 is where comments will be filed — the prototype itself often lives in a different repo (the current working directory). Determine the prototype repo from the cwd:
+   \`\`\`bash
+   gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null
+   \`\`\`
+   If that returns nothing (no git remote in cwd), the prototype is local-only and you can skip Pages detection in step 8. Save the result as \`<prototype_repo>\` for use below — DO NOT confuse it with the comments repo.
+
+8. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
    - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent **production** URL for this project. **Never** use a localhost / 127.0.0.1 / 0.0.0.0 URL — those can't be shared.
-   - GitHub Pages: \`gh api repos/<owner/repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
+   - GitHub Pages on the **prototype repo** (from step 7, NOT the comments repo): \`gh api repos/<prototype_repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
    - \`package.json\` \`homepage\` field, but only if it's a real https URL (not localhost).
    - Otherwise ask: \`Where will this prototype be hosted? (paste public URL, or press Enter to skip)\`
 
@@ -135,22 +141,28 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
 
    Save the URL (if a real public one was found/given) as \`prototype_url\` in the project entry.
 
-8. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
+9. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
 
-9. **Offer to deploy** so the script tag goes live immediately. Detect a deploy command:
-   - Read \`package.json\` and look at \`scripts.deploy\`. If it exists, that's the command.
-   - If no \`scripts.deploy\` but the project has a \`gh-pages\` dependency and a \`scripts.build\`, the deploy is likely \`npm run build && npx gh-pages -d dist\` (or whatever the build output dir is — check \`vite.config\` / \`dist\` / \`build\`).
-   - For Vercel/Netlify projects (presence of \`.vercel/\` or \`netlify.toml\`), no deploy command is needed — they auto-deploy on git push. Skip this step and instead remind the user to push: \`git push\`.
-   - If you can't figure out the deploy command, skip this step.
+10. **Offer to deploy** so the script tag goes live immediately. Be aggressive about detection — DO NOT silently skip this step:
+    - Read \`package.json\` \`scripts\` field and list any plausibly deploy-related script names: \`deploy\`, \`publish\`, \`gh-pages\`, \`predeploy\` + \`deploy\`, \`build:deploy\`, etc.
+    - If none of those exist but the project has a \`gh-pages\` dependency and a \`scripts.build\`, the deploy is likely \`npm run build && npx gh-pages -d <build-output-dir>\` (check \`vite.config\` for \`build.outDir\`, otherwise default to \`dist\`).
+    - For **Vercel/Netlify** projects (presence of \`.vercel/\` or \`netlify.toml\`), no deploy command is needed — they auto-deploy on git push. Just commit + \`git push\` and tell the user the deploy is in flight.
+    - For **GitHub Pages serving from main branch root** (check via \`gh api repos/<prototype_repo>/pages -q .source.branch 2>/dev/null\` returning \`main\` and path \`/\`), again just commit + push.
+    - If you found a candidate command, ask:
+      \`\`\`
+      To make the script tag live, I need to deploy.
+      Run \`<command>\` now? [Y/n]
+      \`\`\`
+    - If you found NOTHING after the above, **don't silently skip** — ask the user explicitly:
+      \`\`\`
+      I couldn't auto-detect a deploy command for this project. How do you usually deploy?
+      (e.g., \`npm run deploy\`, \`vercel\`, \`git push origin gh-pages\`, or "skip")
+      \`\`\`
+      Save whatever they say as \`deploy_command\` in projects.json so we can offer to re-run it next time.
 
-   If a deploy command was found, ask:
-   \`\`\`
-   To make the script tag live on <prototype_url>, I need to deploy.
-   Run \`<command>\` now? [Y/n]
-   \`\`\`
-   If yes, commit any pending changes (script tag insertion) first, then run the deploy command. Print success/failure.
+    If yes, commit any pending changes (script tag insertion) first with a message like "add proto-comments script", then run the deploy command. Print success/failure clearly. On success, refresh the prototype URL from Pages/Vercel after deploy completes.
 
-10. **Print**:
+11. **Print**:
    \`\`\`
    ✓ Created project "<name>" (<slug>)
    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
