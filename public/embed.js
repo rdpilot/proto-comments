@@ -85,12 +85,13 @@
     }
     return api(`/api/embed/config?${withRepoLabel()}`);
   }
-  let ephemeralCounter = 1;
+  let ephemeralCounter = 0;
   async function postComment(payload) {
     if (ephemeral) {
       // Fake a server response shape so the rest of the embed thinks
-      // it succeeded. Comment vanishes on next refresh.
-      const id = String(1000 + ephemeralCounter++);
+      // it succeeded. Comment vanishes on next refresh. ID is 1-indexed
+      // so demo pins read cleanly (1, 2, 3) instead of GitHub issue numbers.
+      const id = String(++ephemeralCounter);
       return {
         id, number: Number(id),
         page_path: payload.page_path, selector: payload.selector,
