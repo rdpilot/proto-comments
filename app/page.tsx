@@ -153,7 +153,7 @@ reviewers don't need an account.`}</pre>
         <span className="lp-spacer" />
         <a href={githubUrl}>GitHub</a>
         <a href="/skill.md">skill.md</a>
-        <span className="muted small">MIT</span>
+        <a className="muted small" href={`${githubUrl}/blob/main/LICENSE`}>MIT</a>
       </footer>
     </div>
   );
