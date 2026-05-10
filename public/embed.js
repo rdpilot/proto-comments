@@ -779,21 +779,13 @@
       panelEl.style.right = 'auto';
       panelEl.style.bottom = 'auto';
     } else {
-<<<<<<< HEAD
-      // Default: top-right with breathing room. Anchored to TOP so when
+      // Default: top-right with 24px breathing room. Anchored to TOP so when
       // the user clicks to expand, the panel grows downward — not upward
       // (which produced a stretched-tall panel when anchored to bottom).
       panelEl.style.left = 'auto';
       panelEl.style.right = '24px';
       panelEl.style.top = '24px';
       panelEl.style.bottom = 'auto';
-=======
-      // Default: top-right. Always reset on refresh — saved positions are
-      // intentionally not restored (see localStorage load logic).
-      panelEl.style.left = 'auto';
-      panelEl.style.right = '16px';
-      panelEl.style.top = '16px';
->>>>>>> landing-review
     }
   }
 
