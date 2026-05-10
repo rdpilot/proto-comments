@@ -131,57 +131,66 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    \`\`\`
    If that returns nothing (no git remote in cwd), the prototype is local-only and you can skip Pages detection in step 8. Save the result as \`<prototype_repo>\` for use below — DO NOT confuse it with the comments repo.
 
-8. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
-   - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent **production** URL for this project. **Never** use a localhost / 127.0.0.1 / 0.0.0.0 URL — those can't be shared.
-   - GitHub Pages on the **prototype repo** (from step 7, NOT the comments repo): \`gh api repos/<prototype_repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
-   - \`package.json\` \`homepage\` field, but only if it's a real https URL (not localhost).
-   - Otherwise ask: \`Where will this prototype be hosted? (paste public URL, or press Enter to skip)\`
+8. **Determine the prototype URL — this is REQUIRED, not optional.** The success message MUST end with a URL the user can share. Work through these in order until you have one:
 
-   **Reject localhost-style URLs** at this step. If you only have a localhost URL (e.g., from a running dev server), don't save it — instead leave \`prototype_url\` unset and the print step will tell the user to deploy first.
+   **a) Live URL detection** — try in this order:
+   - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and pick the most recent **production** URL.
+   - GitHub Pages live: \`gh api repos/<prototype_repo>/pages 2>/dev/null\` → use \`html_url\` if returned.
+   - Cloudflare Pages: check for \`wrangler.toml\` or \`.wrangler/\` directory; if present, the URL is \`https://<project-name>.pages.dev\` where project-name is in wrangler.toml.
+   - \`package.json\` \`homepage\` field if it's a real https URL.
 
-   Save the URL (if a real public one was found/given) as \`prototype_url\` in the project entry.
+   **b) Predicted URL fallback** — if (a) found nothing live, predict from the platform:
+   - If \`<prototype_repo>\` is set and the project looks like a GitHub Pages candidate (has an \`index.html\` at root, or a Pages config exists even if not yet active), the URL is \`https://<owner>.github.io/<repo-name>/\`.
+   - If \`.vercel/\` exists but no live URL, the URL will be \`https://<project-name>.vercel.app\` (read project name from \`.vercel/project.json\`).
 
-9. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
+   **c) Never accept localhost.** Reject \`localhost\`, \`127.0.0.1\`, \`0.0.0.0\` from any source.
 
-10. **Offer to deploy** so the script tag goes live immediately. Be aggressive about detection — DO NOT silently skip this step:
-    - Read \`package.json\` \`scripts\` field and list any plausibly deploy-related script names: \`deploy\`, \`publish\`, \`gh-pages\`, \`predeploy\` + \`deploy\`, \`build:deploy\`, etc.
-    - If none of those exist but the project has a \`gh-pages\` dependency and a \`scripts.build\`, the deploy is likely \`npm run build && npx gh-pages -d <build-output-dir>\` (check \`vite.config\` for \`build.outDir\`, otherwise default to \`dist\`).
-    - For **Vercel/Netlify** projects (presence of \`.vercel/\` or \`netlify.toml\`), no deploy command is needed — they auto-deploy on git push. Just commit + \`git push\` and tell the user the deploy is in flight.
-    - For **GitHub Pages serving from main branch root** (check via \`gh api repos/<prototype_repo>/pages -q .source.branch 2>/dev/null\` returning \`main\` and path \`/\`), again just commit + push.
-    - If you found a candidate command, ask:
-      \`\`\`
-      To make the script tag live, I need to deploy.
-      Run \`<command>\` now? [Y/n]
-      \`\`\`
-    - If you found NOTHING after the above, **don't silently skip** — ask the user explicitly:
-      \`\`\`
-      I couldn't auto-detect a deploy command for this project. How do you usually deploy?
-      (e.g., \`npm run deploy\`, \`vercel\`, \`git push origin gh-pages\`, or "skip")
-      \`\`\`
-      Save whatever they say as \`deploy_command\` in projects.json so we can offer to re-run it next time.
-
-    If yes, commit any pending changes (script tag insertion) first with a message like "add proto-comments script", then run the deploy command. Print success/failure clearly. On success, refresh the prototype URL from Pages/Vercel after deploy completes.
-
-11. **Print**:
+   **d) Last resort** — if all of the above fail, ask the user directly:
    \`\`\`
-   ✓ Created project "<name>" (<slug>)
-   ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
-     → https://github.com/<owner/repo>/issues?q=label:%22proto-comments:<slug>%22
-   ✓ Script tag added to <file>
-
-   Prototype: <prototype_url>            ← only print this line if a public URL was saved
-   Share that URL with reviewers — they don't need an account.
-   Run /proto-comments fetch <slug> to pull comments back as markdown.
+   I couldn't figure out where this prototype will be hosted. Where will reviewers access it?
+   (e.g., https://my-prototype.pages.dev, https://you.github.io/my-app/)
    \`\`\`
+   Block on their answer — don't proceed without a URL.
 
-   If no public URL was saved (because none was detected, the user skipped, or only a localhost URL was available), replace the "Prototype:" + "Share that URL" lines with:
-   \`\`\`
-   Deploy your prototype to a public URL (Vercel, Netlify, GitHub Pages, etc.)
-   so reviewers can access it. The script tag is already in place — once deployed,
-   the comment overlay will show up automatically.
-   \`\`\`
+   Save the chosen URL as \`prototype_url\` in the project entry. Track whether it's confirmed live or predicted (\`prototype_url_live: true|false\`) so the print step can adjust wording.
 
-   You can also run /proto-comments fetch <slug> any time to pull comments back here.
+9. **Save** \`{slug: {name, repo, label, prototype_url, prototype_url_live, created_at}}\` to \`~/.proto-comments/projects.json\`.
+
+10. **Deploy automatically** so the URL works immediately. **Don't ask permission — just run it.** Detect the deploy command:
+    - Read \`package.json\` \`scripts\` and pick any of: \`deploy\`, \`publish\`, \`gh-pages\`, \`build:deploy\`. If \`predeploy\` exists alongside \`deploy\`, just running \`npm run deploy\` triggers both.
+    - If no script but the project has a \`gh-pages\` dependency + \`scripts.build\`, the command is \`npm run build && npx gh-pages -d <out-dir>\` (out-dir from \`vite.config\` \`build.outDir\`, default \`dist\`).
+    - For **Vercel/Netlify/Cloudflare Pages** projects with auto-deploy on push (presence of \`.vercel/\`, \`netlify.toml\`, or \`wrangler.toml\` with Pages config), the command is just \`git add -A && git commit -m "add proto-comments script" && git push\`.
+    - For **GitHub Pages serving from main branch root** (\`gh api repos/<prototype_repo>/pages -q .source.branch 2>/dev/null\` returns \`main\` with path \`/\`), same as above: commit + push.
+    - If you genuinely cannot determine a deploy command, ask the user once:
+      \`\`\`
+      I couldn't figure out how to deploy this. What command do you usually run?
+      (e.g., \`npm run deploy\`, \`vercel --prod\`, or type "skip" to deploy yourself later)
+      \`\`\`
+      Save the answer as \`deploy_command\` in projects.json. If they say "skip", proceed to the print step but flag the URL as not-yet-live.
+
+    Run the chosen command. Stream output so the user sees progress. Wait for it to finish.
+
+    After deploy succeeds, mark \`prototype_url_live: true\` in projects.json.
+
+11. **Print** (always include the URL):
+    \`\`\`
+    ✓ Created project "<name>" (<slug>)
+    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
+      → https://github.com/<owner/repo>/issues?q=label:%22proto-comments:<slug>%22
+    ✓ Script tag added to <file>
+    ✓ Deployed                                ← only if deploy actually ran successfully
+
+    Prototype: <prototype_url>
+    <one of the lines below depending on state>
+    \`\`\`
+
+    Pick the trailing line based on state:
+    - Deploy ran successfully: \`Live now — share the URL above with reviewers (they don't need an account).\`
+    - Deploy is async (Vercel/Netlify auto-deploy via push): \`Live in ~30 seconds (Vercel/Netlify is building) — then share with reviewers.\`
+    - User skipped deploy: \`Deploy your prototype to make this URL live, then share it with reviewers.\`
+
+    Always end with: \`Run /proto-comments fetch <slug> to pull comments back here.\`
+   \`\`\`
 
 ### \`fetch [slug]\`
 
