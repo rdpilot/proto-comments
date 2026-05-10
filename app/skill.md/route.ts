@@ -125,7 +125,21 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    Save the URL (if found) as \`prototype_url\` in the project entry.
 
 7. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
-8. **Print**:
+
+8. **Offer to deploy** so the script tag goes live immediately. Detect a deploy command:
+   - Read \`package.json\` and look at \`scripts.deploy\`. If it exists, that's the command.
+   - If no \`scripts.deploy\` but the project has a \`gh-pages\` dependency and a \`scripts.build\`, the deploy is likely \`npm run build && npx gh-pages -d dist\` (or whatever the build output dir is — check \`vite.config\` / \`dist\` / \`build\`).
+   - For Vercel/Netlify projects (presence of \`.vercel/\` or \`netlify.toml\`), no deploy command is needed — they auto-deploy on git push. Skip this step and instead remind the user to push: \`git push\`.
+   - If you can't figure out the deploy command, skip this step.
+
+   If a deploy command was found, ask:
+   \`\`\`
+   To make the script tag live on <prototype_url>, I need to deploy.
+   Run \`<command>\` now? [Y/n]
+   \`\`\`
+   If yes, commit any pending changes (script tag insertion) first, then run the deploy command. Print success/failure.
+
+9. **Print**:
    \`\`\`
    ✓ Created project "<name>" (<slug>)
    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
