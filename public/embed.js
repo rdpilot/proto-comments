@@ -20,8 +20,11 @@
   const repo = script.getAttribute('data-repo');
   const label = script.getAttribute('data-label');
   // Optional override for the minimized-pill text. Defaults to "+ Comment".
-  // Used by the landing page demo to say "Try it here →" instead.
   const pillLabel = script.getAttribute('data-pill-label') || '+ Comment';
+  // Ephemeral mode: never hit the server. Comments live in memory only and
+  // vanish on refresh. Used by the landing-page demo so visitors can try
+  // the UX without polluting the real GitHub repo.
+  const ephemeral = script.getAttribute('data-ephemeral') === 'true';
   const apiBase = new URL(script.src).origin;
 
   if (!repo || !label) {
@@ -75,9 +78,27 @@
     return `repo=${encodeURIComponent(repo)}&label=${encodeURIComponent(label)}${qs ? '&' + qs : ''}`;
   }
   async function fetchConfig() {
+    if (ephemeral) {
+      // Demo mode: never hit the server. Start with no comments; whatever
+      // the visitor posts in this session lives in memory until refresh.
+      return { project: { id: label, name: label.replace(/^proto-comments:/, ''), slug: label }, comments: [] };
+    }
     return api(`/api/embed/config?${withRepoLabel()}`);
   }
+  let ephemeralCounter = 1;
   async function postComment(payload) {
+    if (ephemeral) {
+      // Fake a server response shape so the rest of the embed thinks
+      // it succeeded. Comment vanishes on next refresh.
+      const id = String(1000 + ephemeralCounter++);
+      return {
+        id, number: Number(id),
+        page_path: payload.page_path, selector: payload.selector,
+        dom_path: payload.dom_path, snippet: payload.snippet,
+        body: payload.body, author_name: payload.author_name,
+        resolved_at: null, created_at: new Date().toISOString(),
+      };
+    }
     return api(`/api/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -85,6 +106,9 @@
     });
   }
   async function patchComment(id, resolved) {
+    if (ephemeral) {
+      return { id, resolved_at: resolved ? new Date().toISOString() : null };
+    }
     return api(`/api/comments/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -92,6 +116,7 @@
     });
   }
   async function pollSince(iso) {
+    if (ephemeral) return { comments: [] };
     return api(`/api/comments?${withRepoLabel('since=' + encodeURIComponent(iso))}`);
   }
 

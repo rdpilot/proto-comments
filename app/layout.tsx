@@ -28,9 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev';
   const isPreview = process.env.VERCEL_ENV === 'preview';
   const label = isPreview ? 'proto-comments:landing-review-73f5' : 'proto-comments:landing-demo';
-  // Friendlier pill copy for the public demo. Preview branches keep the
-  // default "+ Comment" since we're using them for actual review work.
+  // Production demo is ephemeral (comments vanish on refresh, never persist
+  // to GitHub) and uses friendlier pill copy. Preview branches use real
+  // server-backed comments since they're for actual review work.
   const pillLabel = isPreview ? undefined : 'Try it here →';
+  const ephemeral = isPreview ? undefined : 'true';
   return (
     <html lang="en">
       <body>
@@ -40,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           data-repo="rdpilot/proto-comments"
           data-label={label}
           {...(pillLabel ? { 'data-pill-label': pillLabel } : {})}
+          {...(ephemeral ? { 'data-ephemeral': ephemeral } : {})}
           async
         />
       </body>
