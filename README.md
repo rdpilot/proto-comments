@@ -1,8 +1,8 @@
 # proto-comments
 
-Pinned comments on any preview URL — wherever your prototype lives. Comments are stored as Issues in a GitHub repo you own. Reviewers don't sign up. You pull comments back into Claude Code as markdown.
+Pinned comments on any prototype URL. Reviewers click anything, leave feedback — no account, no sign-up. You pull the comments into Claude Code as markdown so your AI agent can ship the fixes.
 
-## How it works
+**Live demo:** [proto-comments.vercel.app](https://proto-comments.vercel.app) — click any element on the page to leave a comment.
 
 ```
    reviewer browser            relay (this app)              your repo
@@ -24,27 +24,75 @@ Pinned comments on any preview URL — wherever your prototype lives. Comments a
 
 - The script tag carries `data-repo` and `data-label`. The relay only knows what it receives in those request parameters; nothing is stored server-side.
 - Comments are GitHub Issues in your repo with the label `proto-comments:<slug>`. Versioned, searchable, exportable, yours.
-- The owner side (`/proto-comments fetch`, `resolve`, etc.) talks to GitHub directly via your local `gh` CLI — no relay involved.
-- The relay is only needed because reviewers' browsers can't authenticate as you. It uses a GitHub App installation token, scoped to repos where the App is installed.
+- Owner side (`fetch`, `resolve`, etc.) talks to GitHub directly via your local `gh` CLI — no relay involved.
+- The relay exists because reviewers' browsers can't authenticate as you. It uses a GitHub App installation token, scoped to repos where the App is installed.
+
+> **About the relay:** by default the slash command points at `proto-comments.vercel.app`, the hosted relay. Every prototype using it depends on that deployment staying up. If you'd rather not, follow [Deploy your own relay](#deploy-your-own-relay) below — comments stay in your repo either way.
+
+## Install (use the hosted relay)
+
+```bash
+mkdir -p ~/.claude/commands
+curl -o ~/.claude/commands/proto-comments.md \
+  https://proto-comments.vercel.app/skill.md
+```
+
+Restart Claude Code. Then in any prototype repo:
+
+```
+/proto-comments new
+```
+
+The skill walks you through:
+1. Picking a GitHub repo where comments will live (uses `gh repo list`)
+2. Installing the GitHub App on that repo (one-click browser flow)
+3. Creating the label and inserting the script tag into your layout
+4. Detecting your deploy target (Vercel / Netlify / GitHub Pages / Cloudflare Pages) and running the deploy
+5. Printing a shareable URL where the comment overlay is live
+
+Share that URL with reviewers. They click any element, leave feedback. To pull comments back:
+
+```
+/proto-comments fetch
+```
+
+To resolve:
+
+```
+/proto-comments resolve 12 17
+```
+
+(issue numbers from the most recent fetch, runs `gh issue close` underneath)
+
+## Slash command reference
+
+| Command | What it does |
+|---|---|
+| `/proto-comments new [name]` | Picks a repo, installs the App, inserts the script tag, deploys, prints a shareable URL. Name is optional — Claude will ask if not given. |
+| `/proto-comments fetch [slug]` | Lists open comments as markdown |
+| `/proto-comments resolve <num1> [num2] ...` | Closes each issue (marks as resolved) |
+| `/proto-comments reopen <num1> [num2] ...` | Reopens each issue |
+| `/proto-comments list` | Lists all your projects |
+| `/proto-comments update` | Re-fetches the skill from the relay (skill auto-updates weekly anyway) |
 
 ## Deploy your own relay
 
-You'll need a Vercel account and a GitHub account. No database is required.
+You'll need a Vercel account and a GitHub account. No database required.
 
 ### 1. Register a GitHub App
 
 - Go to https://github.com/settings/apps/new
 - Name: `your-org-proto-comments` (must be globally unique on GitHub)
-- Homepage URL: your eventual Vercel URL (or just `https://example.com` for now — you can edit later)
+- Homepage URL: your eventual Vercel URL (or `https://example.com` for now — editable later)
 - Webhook → uncheck **Active**
-- Permissions → Repository → **Issues: Read & write** (everything else: No access)
-- Where can this be installed: **Any account** (open-source) or **Only this account**
+- Repository permissions → **Issues: Read & write** (everything else: No access)
+- Where can this be installed: **Any account** or **Only this account**
 - Click **Create GitHub App**
 
-After creating, on the App settings page:
+After creating:
 - Note the **App ID** (numeric)
-- Click **Generate a private key**, download the .pem file
-- Note the **App slug** (the part of the URL like `github.com/apps/<this-name>`)
+- Click **Generate a private key** → download the `.pem` file
+- Note the **App slug** (the URL is `github.com/apps/<slug>`)
 
 ### 2. Deploy to Vercel
 
@@ -56,45 +104,7 @@ Import this repo at https://vercel.com/new. Set these env vars:
 | `GITHUB_APP_NAME` | The App slug (e.g. `proto-comments`) |
 | `GITHUB_APP_PRIVATE_KEY_BASE64` | `cat key.pem \| base64` (paste the result, no newlines) |
 
-Deploy. You'll get a URL like `https://your-tool.vercel.app`.
-
-### 3. Install the slash command
-
-```bash
-mkdir -p ~/.claude/commands
-curl -o ~/.claude/commands/proto-comments.md https://YOUR-DEPLOY-URL/skill.md
-```
-
-Restart Claude Code.
-
-### 4. Use it
-
-In any prototype repo:
-
-```
-/proto-comments new "Checkout v2"
-```
-
-The skill walks you through:
-- Picking a repo (using `gh repo list`)
-- Installing the GitHub App on that repo (one-click in browser)
-- Inserting the script tag into your prototype's layout
-
-Then share the prototype URL with reviewers. They click any element, type a name once, leave comments. Comments land as Issues in your chosen repo with a `proto-comments:<slug>` label.
-
-To pull comments back as markdown:
-
-```
-/proto-comments fetch
-```
-
-To mark resolved:
-
-```
-/proto-comments resolve 12 17
-```
-
-(uses issue numbers from the last fetch, runs `gh issue close` underneath)
+Deploy. Your slash command install URL is `https://YOUR-DEPLOY-URL/skill.md`.
 
 ## Local development
 
@@ -108,29 +118,27 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Slash command reference
+## What's not in v1
 
-| Command | What it does |
-|---|---|
-| `/proto-comments new "Project name"` | Picks a repo, installs the App on it, inserts the script tag |
-| `/proto-comments fetch [slug]` | `gh issue list` for the project's label, formats as markdown |
-| `/proto-comments resolve <num1> [num2] ...` | `gh issue close` for each |
-| `/proto-comments reopen <num1> [num2] ...` | `gh issue reopen` for each |
-| `/proto-comments list` | Lists projects from `~/.proto-comments/projects.json` |
-
-## What's NOT in v1
-
-- No threading / replies
-- No notifications when comments arrive (use GitHub's own — watch the label)
-- No web dashboard for owners (gh CLI is the dashboard)
+- No threading / replies (one comment = one Issue)
+- No notifications when comments arrive (subscribe to the GitHub label instead)
+- No web dashboard for owners (the `gh` CLI is the dashboard)
 - No verifiable identity for reviewers — display names are honor-system
 
 ## Security model
 
-- The relay is stateless. It uses GitHub App installation tokens (scoped to specific repos, auto-expire) to read/write Issues. It cannot access repos where the App isn't installed.
-- The script tag exposes `data-repo` and `data-label`. Anyone who sees the prototype source can read or post comments to that label. For private repos, GitHub's own access control gates reads — but the relay can still post if it's installed on the repo. Treat the prototype URL as semi-public.
-- Display names are not authenticated. Anyone with the URL can post as any name. Fine for internal teams.
-- The GitHub App's private key is the only secret you hold. Don't commit it. Rotate it by regenerating in GitHub App settings if leaked.
+- The relay is **stateless**. GitHub App installation tokens (scoped to specific repos, auto-expire) read/write Issues. It cannot touch repos where the App isn't installed.
+- POST/PATCH require a browser `Origin` or `Referer` header — blocks `curl`-based abuse.
+- Per-(repo + IP) rate limit: 30 comments/minute on POST.
+- The script tag exposes `data-repo` and `data-label`. Anyone who sees the prototype source can post comments to that label. For private repos, GitHub's own access control gates reads. Treat the prototype URL as semi-public.
+- Display names are not authenticated. Anyone with the URL can post as any name. Fine for internal review; not a substitute for a real identity system.
+- The GitHub App's private key is the only secret you hold. Don't commit it. Rotate by regenerating in GitHub App settings if leaked.
+
+## Troubleshooting
+
+- **Overlay doesn't show up:** open the page with `?__pc_reset=1` to nuke any stale localStorage. Check the browser console for `[proto-comments]` messages.
+- **First comment fails to save:** the GitHub App needs `Issues: Read & write` on the chosen repo. Reinstall the App and confirm permissions.
+- **Pin appears in the wrong place after a redesign:** the embed falls back to text-snippet matching when the CSS selector breaks, but if the surrounding text has also changed, the pin won't find anything. Resolve and re-comment.
 
 ## License
 

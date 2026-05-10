@@ -22,9 +22,23 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Live demo: load the comment overlay on production AND preview deployments
+  // so visitors can try it directly on the landing page. Cache-bust on deploy
+  // SHA so embed.js updates always hit fresh.
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev';
+  const isPreview = process.env.VERCEL_ENV === 'preview';
+  const label = isPreview ? 'proto-comments:landing-review-73f5' : 'proto-comments:landing-demo';
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <script
+          src={`https://proto-comments.vercel.app/embed.js?v=${sha}`}
+          data-repo="rdpilot/proto-comments"
+          data-label={label}
+          async
+        />
+      </body>
     </html>
   );
 }
