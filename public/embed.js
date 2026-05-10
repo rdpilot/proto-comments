@@ -59,7 +59,9 @@
     // drag it within a session, but a refresh always brings it back.
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
-    state.authorName = localStorage.getItem('__pc_name') || '';
+    // In ephemeral mode (demo), don't persist or restore the name —
+    // each visitor starts fresh as "you" and nothing is saved.
+    state.authorName = ephemeral ? 'you' : (localStorage.getItem('__pc_name') || '');
   } catch (_) {}
 
   // ---------------------------------------------------------------------------
@@ -902,7 +904,10 @@
       const name = (input.value || '').trim().slice(0, 64);
       if (!name) { input.focus(); return; }
       state.authorName = name;
-      try { localStorage.setItem('__pc_name', name); } catch (_) {}
+      // Don't persist in ephemeral mode (demo) — name vanishes on refresh.
+      if (!ephemeral) {
+        try { localStorage.setItem('__pc_name', name); } catch (_) {}
+      }
       authEl.remove(); authEl = null;
       renderPanel();
     };
