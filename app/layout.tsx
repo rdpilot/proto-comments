@@ -22,15 +22,18 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // proto-comments overlay — only on preview deployments, never on production
+  // proto-comments overlay — only on preview deployments, never on production.
+  // Cache-bust on the deploy SHA so each new deploy fetches a fresh embed.js
+  // (avoids stale browser cache hiding fixes).
   const showOverlay = process.env.VERCEL_ENV === 'preview';
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev';
   return (
     <html lang="en">
       <body>
         {children}
         {showOverlay && (
           <script
-            src="https://proto-comments.vercel.app/embed.js"
+            src={`https://proto-comments.vercel.app/embed.js?v=${sha}`}
             data-repo="rdpilot/proto-comments"
             data-label="proto-comments:landing-review-73f5"
             async
