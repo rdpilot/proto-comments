@@ -104,6 +104,7 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    \`\`\`
    ✓ Created project "<name>" (<slug>)
    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
+     → https://github.com/<owner/repo>/issues?q=label:%22proto-comments:<slug>%22
    ✓ Script tag added to <file>
 
    Share your prototype URL with reviewers — they don't need an account.
