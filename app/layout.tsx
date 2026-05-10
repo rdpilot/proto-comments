@@ -22,9 +22,21 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // proto-comments overlay — only on preview deployments, never on production
+  const showOverlay = process.env.VERCEL_ENV === 'preview';
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        {showOverlay && (
+          <script
+            src="https://proto-comments.vercel.app/embed.js"
+            data-repo="rdpilot/proto-comments"
+            data-label="proto-comments:landing-review-73f5"
+            async
+          />
+        )}
+      </body>
     </html>
   );
 }
