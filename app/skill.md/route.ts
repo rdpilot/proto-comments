@@ -45,7 +45,14 @@ Name is optional — ask if missing. Run all steps in order, no permission promp
 
 4. **Create label**: \`gh label create "proto-comments:<slug>" -R <owner/repo> --color 5e6ad2 --description "proto-comments review thread" 2>/dev/null || true\`
 
-5. **Insert script tag** in current dir's root layout (\`app/layout.tsx\` for Next App Router, \`pages/_app.tsx\` for Pages, else \`index.html\`). Ask if unsure. Default unconditional include:
+5. **Insert script tag** in current dir's root layout (\`app/layout.tsx\` for Next App Router, \`pages/_app.tsx\` for Pages, else \`index.html\`). Ask if unsure.
+
+   **For plain \`index.html\`** — use a single sed command, no Read+Edit handshake:
+   \`\`\`bash
+   sed -i.bak 's|</body>|  <script src="__API_BASE__/embed.js" data-repo="<owner/repo>" data-label="proto-comments:<slug>" async></script>\\n</body>|' index.html && rm index.html.bak
+   \`\`\`
+
+   **For Next.js / Vite / framework files** — Edit the file with the script tag before \`</body>\`. Default unconditional include:
    \`\`\`html
    <script src="__API_BASE__/embed.js" data-repo="<owner/repo>" data-label="proto-comments:<slug>" async></script>
    \`\`\`
