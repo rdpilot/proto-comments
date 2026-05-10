@@ -20,12 +20,12 @@ export default function HomePage() {
 
       <section className="lp-hero">
         <h1 style={{ textWrap: 'balance' }}>
-          Pinned comments on any preview URL, wherever your prototype lives.
+          Comment on any prototype URL.<br />
+          Feedback your AI agent can act on.
         </h1>
         <p>
-          Vercel, Netlify, Cloudflare Pages, localhost, custom staging — your prototype
-          loads, your team comments, you pull the feedback into Claude Code as markdown.
-          One slash command, one script tag, no&nbsp;accounts.
+          Reviewers pin feedback to any element — no account needed.
+          Pull it into Claude Code as markdown, your AI applies the&nbsp;fixes.
         </p>
         <a className="lp-cta" href="#install">Install →</a>
         <a className="lp-cta-secondary" href={githubUrl}>View on GitHub</a>
