@@ -55,18 +55,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'app not installed on this repo' }, { status: 404 });
   }
 
-  // Make sure the label exists; create it if not.
+  // Make sure the label exists; create it if not. Surface real errors —
+  // silently swallowing them caused first-comment-fails-with-no-clue bugs.
   try {
     await octokit.request('GET /repos/{owner}/{repo}/labels/{name}', {
       owner: repo.owner, repo: repo.repo, name: label,
     });
   } catch (e: any) {
     if (e.status === 404) {
-      await octokit.request('POST /repos/{owner}/{repo}/labels', {
-        owner: repo.owner, repo: repo.repo, name: label,
-        color: '5e6ad2',
-        description: 'proto-comments review feedback',
-      }).catch(() => { /* ignore race */ });
+      try {
+        await octokit.request('POST /repos/{owner}/{repo}/labels', {
+          owner: repo.owner, repo: repo.repo, name: label,
+          color: '5e6ad2',
+          description: 'proto-comments review feedback',
+        });
+      } catch (createErr: any) {
+        // 422 = already exists (race with another concurrent POST). Anything
+        // else means we genuinely couldn't create it — surface it so the
+        // caller sees something better than "failed to save".
+        if (createErr.status !== 422) {
+          return NextResponse.json({
+            error: 'failed to create label',
+            detail: createErr.message,
+            hint: 'The GitHub App may be missing "Issues: Write" permission on this repo. Re-install the App and grant it.',
+          }, { status: 500 });
+        }
+      }
+    } else {
+      // Unexpected error checking for the label (auth, network, etc.) —
+      // log it but proceed; issue creation will give a real error if it can't apply the label.
+      console.error('label probe failed:', e.message);
     }
   }
 
