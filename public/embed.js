@@ -697,9 +697,13 @@
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
     } else {
-      panelEl.style.left = 'auto';
-      panelEl.style.right = '16px';
-      panelEl.style.top = '16px';
+      // default: bottom-center
+      const r = panelEl.getBoundingClientRect();
+      const w = r.width || (state.panelMinimized ? 140 : 340);
+      const h = r.height || (state.panelMinimized ? 32 : 200);
+      panelEl.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
+      panelEl.style.top = Math.max(8, window.innerHeight - h - 24) + 'px';
+      panelEl.style.right = 'auto';
     }
   }
 
