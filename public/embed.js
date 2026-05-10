@@ -704,19 +704,20 @@
 
   function applyPanelPos() {
     if (!panelEl) return;
+    const r = panelEl.getBoundingClientRect();
+    const w = r.width || (state.panelMinimized ? 140 : 340);
+    const h = r.height || (state.panelMinimized ? 32 : 200);
     if (state.panelPos) {
-      const r = panelEl.getBoundingClientRect();
-      const w = r.width || (state.panelMinimized ? 60 : 340);
-      const h = r.height || (state.panelMinimized ? 32 : 200);
       const left = Math.max(8, Math.min(state.panelPos.left, window.innerWidth - w - 8));
       const top = Math.max(8, Math.min(state.panelPos.top, window.innerHeight - h - 8));
       panelEl.style.left = left + 'px';
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
     } else {
-      panelEl.style.left = 'auto';
-      panelEl.style.right = '16px';
-      panelEl.style.top = '16px';
+      // Default: bottom-center. Visible without colliding with site nav/CTAs.
+      panelEl.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
+      panelEl.style.top = Math.max(8, window.innerHeight - h - 24) + 'px';
+      panelEl.style.right = 'auto';
     }
   }
 
@@ -879,7 +880,18 @@
     if (e.key === 'Escape' && popoverEl) closePopover();
   }
 
-  function onScrollOrResize() { renderPins(); }
+  // rAF-throttle scroll/resize. On resize, also re-clamp the panel position so
+  // it stays in viewport (e.g., dragging from external monitor to laptop).
+  let rafQueued = false;
+  function onScrollOrResize(e) {
+    if (rafQueued) return;
+    rafQueued = true;
+    requestAnimationFrame(() => {
+      rafQueued = false;
+      renderPins();
+      if (e && e.type === 'resize') applyPanelPos();
+    });
+  }
 
   // SPA route changes: re-render pins/panel when the path changes without a full reload.
   // We patch history.pushState/replaceState to fire a custom event, and also listen for popstate.
@@ -932,6 +944,26 @@
 
     renderAll();
     consumeJumpHash();
+
+    // Self-check: confirm panel is actually in the viewport. If not, the saved
+    // position must have been clamped to a bad spot OR the user's window has
+    // changed. Force-reset to bottom-center default and re-render.
+    setTimeout(() => {
+      if (!panelEl) return;
+      const r = panelEl.getBoundingClientRect();
+      const visible = r.width > 0 && r.height > 0
+        && r.right > 0 && r.bottom > 0
+        && r.left < window.innerWidth
+        && r.top < window.innerHeight;
+      if (!visible) {
+        console.warn('[proto-comments] panel rendered off-screen, resetting position');
+        state.panelPos = null;
+        try { localStorage.removeItem('__pc_panel_pos'); } catch (_) {}
+        applyPanelPos();
+      } else {
+        console.log('[proto-comments] ready —', state.comments.length, 'comments,', state.panelMinimized ? 'minimized' : 'expanded', 'at', Math.round(r.left) + ',' + Math.round(r.top));
+      }
+    }, 200);
     startPolling();
   }
 
