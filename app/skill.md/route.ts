@@ -126,12 +126,14 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    \`\`\`
 
 7. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
-   - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent production URL for this project. If \`vercel\` CLI isn't available, skip.
+   - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent **production** URL for this project. **Never** use a localhost / 127.0.0.1 / 0.0.0.0 URL — those can't be shared.
    - GitHub Pages: \`gh api repos/<owner/repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
-   - \`package.json\` \`homepage\` field.
-   - Otherwise ask: \`Where will this prototype be hosted? (paste URL, or press Enter to skip)\`
+   - \`package.json\` \`homepage\` field, but only if it's a real https URL (not localhost).
+   - Otherwise ask: \`Where will this prototype be hosted? (paste public URL, or press Enter to skip)\`
 
-   Save the URL (if found) as \`prototype_url\` in the project entry.
+   **Reject localhost-style URLs** at this step. If you only have a localhost URL (e.g., from a running dev server), don't save it — instead leave \`prototype_url\` unset and the print step will tell the user to deploy first.
+
+   Save the URL (if a real public one was found/given) as \`prototype_url\` in the project entry.
 
 8. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
 
@@ -155,15 +157,19 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
      → https://github.com/<owner/repo>/issues?q=label:%22proto-comments:<slug>%22
    ✓ Script tag added to <file>
 
-   Prototype: <prototype_url>            ← only print this line if URL was found/given
+   Prototype: <prototype_url>            ← only print this line if a public URL was saved
    Share that URL with reviewers — they don't need an account.
    Run /proto-comments fetch <slug> to pull comments back as markdown.
    \`\`\`
 
-   If no URL was found or given, replace the "Prototype:" line with:
+   If no public URL was saved (because none was detected, the user skipped, or only a localhost URL was available), replace the "Prototype:" + "Share that URL" lines with:
    \`\`\`
-   Share your prototype URL with reviewers — they don't need an account.
+   Deploy your prototype to a public URL (Vercel, Netlify, GitHub Pages, etc.)
+   so reviewers can access it. The script tag is already in place — once deployed,
+   the comment overlay will show up automatically.
    \`\`\`
+
+   You can also run /proto-comments fetch <slug> any time to pull comments back here.
 
 ### \`fetch [slug]\`
 
