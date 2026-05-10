@@ -38,9 +38,26 @@
     filter: 'unresolved', // 'all' | 'unresolved' | 'mine'
   };
 
+  // Allow forcing a reset via ?__pc_reset=1 — escape hatch when the panel
+  // somehow got off-screen due to a stale saved position.
+  if (/[?&]__pc_reset=1\b/.test(location.search)) {
+    try {
+      localStorage.removeItem('__pc_panel_pos');
+      localStorage.removeItem('__pc_panel_min');
+    } catch (_) {}
+  }
+
   try {
     const saved = JSON.parse(localStorage.getItem('__pc_panel_pos') || 'null');
-    if (saved && typeof saved.left === 'number') state.panelPos = saved;
+    // Reject saved positions that would put the panel mostly off-screen.
+    if (saved && typeof saved.left === 'number' && typeof saved.top === 'number'
+        && saved.left >= 0 && saved.top >= 0
+        && saved.left < window.innerWidth - 40
+        && saved.top < window.innerHeight - 20) {
+      state.panelPos = saved;
+    } else if (saved) {
+      try { localStorage.removeItem('__pc_panel_pos'); } catch (_) {}
+    }
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
     state.authorName = localStorage.getItem('__pc_name') || '';
