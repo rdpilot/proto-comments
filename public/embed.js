@@ -40,7 +40,7 @@
 
   try {
     const saved = JSON.parse(localStorage.getItem('__pc_panel_pos') || 'null');
-    if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') state.panelPos = saved;
+    if (saved && typeof saved.left === 'number') state.panelPos = saved;
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
     state.authorName = localStorage.getItem('__pc_name') || '';
@@ -138,34 +138,8 @@
     return `<${el.tagName.toLowerCase()}>`;
   }
 
-  // Resolve a comment to a DOM element, with progressive fallback so pins
-  // survive class-name churn between deploys (CSS Modules, styled-components,
-  // Tailwind JIT, etc.). Returns null if nothing plausible matches.
-  function resolveElement(c) {
-    // 1. Exact selector — fastest path, works most of the time.
-    try {
-      const el = document.querySelector(c.selector);
-      if (el) return el;
-    } catch (_) { /* invalid selector */ }
-
-    // 2. Snippet text match — find an element whose visible text matches
-    //    the captured snippet. Scoped to a candidate set keyed off the
-    //    last segment of dom_path (tag name) to avoid scanning the whole DOM.
-    if (c.snippet && c.dom_path) {
-      const lastSeg = c.dom_path.split('>').pop()?.trim() || '';
-      const tag = lastSeg.replace(/[#.].*$/, '').toLowerCase();
-      if (tag) {
-        const target = c.snippet.replace(/\.\.\.$/, '').trim();
-        const candidates = document.getElementsByTagName(tag);
-        for (let i = 0; i < candidates.length; i++) {
-          const text = (candidates[i].innerText || candidates[i].textContent || '').trim().replace(/\s+/g, ' ');
-          if (text === target || (target && text.startsWith(target))) {
-            return candidates[i];
-          }
-        }
-      }
-    }
-    return null;
+  function emailHandle(email) {
+    return (email || '').split('@')[0] || 'anonymous';
   }
 
   // ---------------------------------------------------------------------------
@@ -419,8 +393,7 @@
   let outlineEl, panelEl, popoverEl, authEl;
 
   function ensureOutline() {
-    // Re-create if SPA wiped <body> and detached our node (rare but possible).
-    if (!outlineEl || !document.body.contains(outlineEl)) {
+    if (!outlineEl) {
       outlineEl = document.createElement('div');
       outlineEl.className = '__pc_outline';
       outlineEl.style.display = 'none';
@@ -484,27 +457,26 @@
   function renderPins() {
     document.querySelectorAll('.__pc_pin').forEach((p) => p.remove());
     const filtered = filteredComments();
-    const frag = document.createDocumentFragment();
-    filtered.forEach((c) => {
+    filtered.forEach((c, i) => {
       // Only render pins for comments on the current page
       if (c.page_path !== location.pathname) return;
-      const el = resolveElement(c);
+      let el = null;
+      try { el = document.querySelector(c.selector); } catch (_) {}
       if (!el) return;
       const r = el.getBoundingClientRect();
       const pin = document.createElement('div');
       pin.className = '__pc_pin' + (c.resolved_at ? ' resolved' : '');
       pin.style.left = r.left + window.scrollX + 'px';
       pin.style.top = r.top + window.scrollY + 'px';
-      pin.innerHTML = `<span>${c.id}</span>`;
-      pin.title = `${c.author_name || 'anonymous'}: ${c.body}`;
+      pin.innerHTML = `<span>${i + 1}</span>`;
+      pin.title = `${emailHandle(c.author_email)}: ${c.body}`;
       pin.addEventListener('click', (e) => {
         e.stopPropagation();
         showOutline(el);
         setTimeout(hideOutline, 1000);
       });
-      frag.appendChild(pin);
+      document.body.appendChild(pin);
     });
-    document.body.appendChild(frag);
   }
 
   // ---------------------------------------------------------------------------
@@ -614,13 +586,13 @@
     const unresolved = state.comments.filter((c) => !c.resolved_at).length;
 
     const items = list.map((c, i) => {
-      const author = c.author_name || 'anonymous';
+      const author = c.author_name || emailHandle(c.author_email);
       const isResolved = !!c.resolved_at;
       const safeId = escapeHtml(c.id);
       return `
         <div class="__pc_item ${isResolved ? 'resolved' : ''}" data-id="${safeId}">
           <div class="__pc_item_meta">
-            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${escapeHtml(c.id)}</span>
+            <span class="__pc_item_num ${isResolved ? 'resolved' : ''}">${i + 1}</span>
             <span class="__pc_item_author">${escapeHtml(author)}</span>
             <span>·</span>
             <span>${escapeHtml(relativeTime(c.created_at))}</span>
@@ -689,7 +661,8 @@
       location.href = url.toString();
       return;
     }
-    const el = resolveElement(c);
+    let el = null;
+    try { el = document.querySelector(c.selector); } catch (_) {}
     if (!el) { toast('Element not found on this page anymore'); return; }
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showOutline(el);
@@ -724,13 +697,9 @@
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
     } else {
-      // default: bottom-center
-      const r = panelEl.getBoundingClientRect();
-      const w = r.width || (state.panelMinimized ? 140 : 340);
-      const h = r.height || (state.panelMinimized ? 32 : 200);
-      panelEl.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
-      panelEl.style.top = Math.max(8, window.innerHeight - h - 24) + 'px';
-      panelEl.style.right = 'auto';
+      panelEl.style.left = 'auto';
+      panelEl.style.right = '16px';
+      panelEl.style.top = '16px';
     }
   }
 
@@ -782,7 +751,7 @@
 
   function svgIcon(kind) {
     if (kind === 'minimize') return `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10"/></svg>`;
-    if (kind === 'expand') return `<span style="font-size:11px;font-weight:500;letter-spacing:0.01em;padding:0 4px;">+ Comment</span>`;
+    if (kind === 'expand') return `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h10M3 8h10M3 11h10"/></svg>`;
     return '';
   }
 
@@ -893,17 +862,7 @@
     if (e.key === 'Escape' && popoverEl) closePopover();
   }
 
-  // rAF-throttle so heavy scroll/resize doesn't trigger renderPins (and its
-  // many querySelectors) on every event.
-  let rafQueued = false;
-  function onScrollOrResize() {
-    if (rafQueued) return;
-    rafQueued = true;
-    requestAnimationFrame(() => {
-      rafQueued = false;
-      renderPins();
-    });
-  }
+  function onScrollOrResize() { renderPins(); }
 
   // SPA route changes: re-render pins/panel when the path changes without a full reload.
   // We patch history.pushState/replaceState to fire a custom event, and also listen for popstate.
@@ -962,35 +921,20 @@
   function startPolling() {
     let lastPoll = new Date().toISOString();
     let inFlight = false;
-    let timer = null;
-
-    async function tick() {
-      if (inFlight || document.hidden) return;
+    setInterval(async () => {
+      if (inFlight) return;
+      if (document.hidden) return;
       inFlight = true;
-      // Capture next-poll timestamp BEFORE issuing the request so any
-      // comment created during the round-trip is still picked up next poll.
-      const nextPoll = new Date().toISOString();
       try {
         const { comments: fresh } = await pollSince(lastPoll);
-        lastPoll = nextPoll;
+        lastPoll = new Date().toISOString();
         if (fresh && fresh.length) {
           fresh.forEach((c) => upsertComment(c));
           renderAll();
         }
       } catch (_) { /* ignore */ }
       inFlight = false;
-    }
-
-    timer = setInterval(tick, 5000);
-    // Catch up immediately when the tab becomes visible again (after long backgrounding).
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) tick();
-    });
-    // Stop polling on pagehide so the script doesn't accumulate on
-    // bfcache restores.
-    window.addEventListener('pagehide', () => {
-      if (timer) { clearInterval(timer); timer = null; }
-    });
+    }, 5000);
   }
 
   window.__protoComments = { state, boot };
