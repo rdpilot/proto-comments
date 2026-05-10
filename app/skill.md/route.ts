@@ -56,6 +56,7 @@ Project metadata is stored in \`~/.proto-comments/projects.json\`:
     "name": "Checkout v2",
     "repo": "owner/repo",
     "label": "proto-comments:checkout-v2",
+    "prototype_url": "https://checkout-v2.vercel.app",
     "created_at": "2026-05-08T..."
   }
 }
@@ -115,16 +116,30 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    )}
    \`\`\`
 
-6. **Save** \`{slug: {name, repo, label, created_at}}\` to \`~/.proto-comments/projects.json\`.
-7. **Print**:
+6. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
+   - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent production URL for this project. If \`vercel\` CLI isn't available, skip.
+   - GitHub Pages: \`gh api repos/<owner/repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
+   - \`package.json\` \`homepage\` field.
+   - Otherwise ask: \`Where will this prototype be hosted? (paste URL, or press Enter to skip)\`
+
+   Save the URL (if found) as \`prototype_url\` in the project entry.
+
+7. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
+8. **Print**:
    \`\`\`
    ✓ Created project "<name>" (<slug>)
    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
      → https://github.com/<owner/repo>/issues?q=label:%22proto-comments:<slug>%22
    ✓ Script tag added to <file>
 
-   Share your prototype URL with reviewers — they don't need an account.
+   Prototype: <prototype_url>            ← only print this line if URL was found/given
+   Share that URL with reviewers — they don't need an account.
    Run /proto-comments fetch <slug> to pull comments back as markdown.
+   \`\`\`
+
+   If no URL was found or given, replace the "Prototype:" line with:
+   \`\`\`
+   Share your prototype URL with reviewers — they don't need an account.
    \`\`\`
 
 ### \`fetch [slug]\`
