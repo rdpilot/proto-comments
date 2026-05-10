@@ -39,8 +39,9 @@
   };
 
   try {
-    const saved = JSON.parse(localStorage.getItem('__pc_panel_pos') || 'null');
-    if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') state.panelPos = saved;
+    // Drag position is intentionally NOT restored from localStorage anymore —
+    // every page load starts the panel at the top-right default. Users can
+    // drag it within a session, but a refresh always brings it back.
     const min = localStorage.getItem('__pc_panel_min');
     if (min !== null) state.panelMinimized = min === '1';
     state.authorName = localStorage.getItem('__pc_name') || '';
@@ -724,13 +725,11 @@
       panelEl.style.top = top + 'px';
       panelEl.style.right = 'auto';
     } else {
-      // default: bottom-center
-      const r = panelEl.getBoundingClientRect();
-      const w = r.width || (state.panelMinimized ? 140 : 340);
-      const h = r.height || (state.panelMinimized ? 32 : 200);
-      panelEl.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
-      panelEl.style.top = Math.max(8, window.innerHeight - h - 24) + 'px';
-      panelEl.style.right = 'auto';
+      // Default: top-right. Always reset on refresh — saved positions are
+      // intentionally not restored (see localStorage load logic).
+      panelEl.style.left = 'auto';
+      panelEl.style.right = '16px';
+      panelEl.style.top = '16px';
     }
   }
 
