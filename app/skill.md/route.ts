@@ -90,13 +90,22 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    - **400** is fine (the probe label is invalid; we just wanted to confirm the App is reachable).
    - **404 "invalid repo or label"** is also fine for the same reason.
    - We're using a probe label only because there's no separate health endpoint. Better to just attempt creating a real comment later and surface install errors then. Skip this probe step if it adds friction.
-4. **Find the prototype's root layout file** in the current working directory:
+4. **Create the label in the repo** so the first comment can be filed against it. The relay (App) doesn't create labels — it just applies them. Run:
+   \`\`\`bash
+   gh label create "proto-comments:<slug>" -R <owner/repo> \\
+     --color "5e6ad2" \\
+     --description "proto-comments review thread" \\
+     2>/dev/null || true
+   \`\`\`
+   The \`|| true\` swallows "already exists" errors (rare on a fresh slug, but safe).
+
+5. **Find the prototype's root layout file** in the current working directory:
    - Next.js App Router → \`app/layout.tsx\`
    - Next.js Pages → \`pages/_app.tsx\`
    - Vite/React → \`index.html\`
    - Plain HTML → \`index.html\`
    If unsure, ask the user.
-5. **Insert the script tag**. Default: include unconditionally so the deployed prototype renders the overlay. Only env-gate if the project has a real customer-facing production build (rare for prototypes):
+6. **Insert the script tag**. Default: include unconditionally so the deployed prototype renders the overlay. Only env-gate if the project has a real customer-facing production build (rare for prototypes):
 
    **Plain HTML / Vite / static prototype** (default):
    \`\`\`html
@@ -116,7 +125,7 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    )}
    \`\`\`
 
-6. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
+7. **Detect or ask for the prototype URL** so reviewers know where to comment. Try auto-detection first:
    - Vercel: \`cat .vercel/project.json\` exists → run \`vercel ls --json 2>/dev/null | head -50\` and look for the most recent production URL for this project. If \`vercel\` CLI isn't available, skip.
    - GitHub Pages: \`gh api repos/<owner/repo>/pages 2>/dev/null\` → if it returns a \`html_url\`, use it.
    - \`package.json\` \`homepage\` field.
@@ -124,9 +133,9 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
 
    Save the URL (if found) as \`prototype_url\` in the project entry.
 
-7. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
+8. **Save** \`{slug: {name, repo, label, prototype_url?, created_at}}\` to \`~/.proto-comments/projects.json\`.
 
-8. **Offer to deploy** so the script tag goes live immediately. Detect a deploy command:
+9. **Offer to deploy** so the script tag goes live immediately. Detect a deploy command:
    - Read \`package.json\` and look at \`scripts.deploy\`. If it exists, that's the command.
    - If no \`scripts.deploy\` but the project has a \`gh-pages\` dependency and a \`scripts.build\`, the deploy is likely \`npm run build && npx gh-pages -d dist\` (or whatever the build output dir is — check \`vite.config\` / \`dist\` / \`build\`).
    - For Vercel/Netlify projects (presence of \`.vercel/\` or \`netlify.toml\`), no deploy command is needed — they auto-deploy on git push. Skip this step and instead remind the user to push: \`git push\`.
@@ -139,7 +148,7 @@ The project name may be quoted or unquoted. Use the entire remainder as the name
    \`\`\`
    If yes, commit any pending changes (script tag insertion) first, then run the deploy command. Print success/failure.
 
-9. **Print**:
+10. **Print**:
    \`\`\`
    ✓ Created project "<name>" (<slug>)
    ✓ Comments will live in <owner/repo> with label proto-comments:<slug>
