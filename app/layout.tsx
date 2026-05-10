@@ -33,6 +33,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // server-backed comments since they're for actual review work.
   const pillLabel = isPreview ? undefined : 'Try it here →';
   const ephemeral = isPreview ? undefined : 'true';
+  // Seed pin on the H1 so visitors see a clickable example immediately.
+  const seed = isPreview ? undefined : JSON.stringify([
+    {
+      id: '1',
+      page_path: '/',
+      selector: 'div.lp-wrap > section.lp-hero > h1',
+      dom_path: 'div > section > h1',
+      snippet: 'Comment on any prototype URL.',
+      body: "Click my pin → click any element → leave a comment. This whole page is the demo. Refresh to clear everything.",
+      author_name: 'roy',
+      resolved_at: null,
+      created_at: '2026-05-10T00:00:00Z',
+    },
+  ]);
   return (
     <html lang="en">
       <body>
@@ -43,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           data-label={label}
           {...(pillLabel ? { 'data-pill-label': pillLabel } : {})}
           {...(ephemeral ? { 'data-ephemeral': ephemeral } : {})}
+          {...(seed ? { 'data-seed': seed } : {})}
           async
         />
       </body>

@@ -77,15 +77,26 @@
   function withRepoLabel(qs) {
     return `repo=${encodeURIComponent(repo)}&label=${encodeURIComponent(label)}${qs ? '&' + qs : ''}`;
   }
+  // Optional seed comments (JSON in data-seed) for demo mode. Useful for
+  // the landing page so visitors land on an existing pin to click.
+  let seedComments = [];
+  const seedAttr = script.getAttribute('data-seed');
+  if (seedAttr) {
+    try { seedComments = JSON.parse(seedAttr); } catch (e) { console.warn('[proto-comments] data-seed parse failed:', e); }
+  }
   async function fetchConfig() {
     if (ephemeral) {
-      // Demo mode: never hit the server. Start with no comments; whatever
-      // the visitor posts in this session lives in memory until refresh.
-      return { project: { id: label, name: label.replace(/^proto-comments:/, ''), slug: label }, comments: [] };
+      // Demo mode: never hit the server. Start with seeded comments only;
+      // whatever the visitor posts lives in memory until refresh.
+      return {
+        project: { id: label, name: label.replace(/^proto-comments:/, ''), slug: label },
+        comments: seedComments,
+      };
     }
     return api(`/api/embed/config?${withRepoLabel()}`);
   }
-  let ephemeralCounter = 0;
+  // Counter starts above the highest seed id so new posts don't collide.
+  let ephemeralCounter = seedComments.reduce((m, c) => Math.max(m, Number(c.id) || 0), 0);
   async function postComment(payload) {
     if (ephemeral) {
       // Fake a server response shape so the rest of the embed thinks
