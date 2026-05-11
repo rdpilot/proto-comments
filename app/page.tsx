@@ -103,13 +103,13 @@ reviewers don't need an account.`}</pre>
               <pre className="lp-code"><span className="c"># My App — 3 comments</span>{`
 
 1. align CTA right on mobile — alex
-   `}<span className="s">{`\`.cta--primary\``}</span>{` · `}<span className="s">{`\`/pricing\``}</span>{`
+   #12 · `}<span className="s">{`\`/pricing\``}</span>{` · `}<span className="s">{`\`.cta--primary\``}</span>{`
 
 2. tighten hero copy — sam
-   `}<span className="s">{`\`h1.hero-title\``}</span>{` · `}<span className="s">{`\`/\``}</span>{`
+   #11 · `}<span className="s">{`\`/\``}</span>{` · `}<span className="s">{`\`h1.hero-title\``}</span>{`
 
 3. logo too small in nav — alex
-   `}<span className="s">{`\`nav .logo\``}</span>{` · `}<span className="s">{`\`/\``}</span>{``}</pre>
+   #9 · `}<span className="s">{`\`/\``}</span>{` · `}<span className="s">{`\`nav .logo\``}</span>{``}</pre>
             </div>
 
           </div>
