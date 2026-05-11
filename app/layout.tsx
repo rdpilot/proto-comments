@@ -32,7 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Production demo is ephemeral (comments vanish on refresh, never persist
   // to GitHub) and uses friendlier pill copy. Preview branches use real
   // server-backed comments since they're for actual review work.
-  const pillLabel = isPreview ? undefined : 'Try it here →';
+  // Video-demo branch: force '+ Comment' pill (default) instead of 'Try it here →'
+  const pillLabel = undefined;
   const ephemeral = isPreview ? undefined : 'true';
   // Seed pin on the H1 so visitors see a clickable example immediately.
   const seed = isPreview ? undefined : JSON.stringify([
