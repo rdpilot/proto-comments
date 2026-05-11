@@ -28,15 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // SHA so embed.js updates always hit fresh.
   const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev';
   const isPreview = process.env.VERCEL_ENV === 'preview';
-  const label = isPreview ? 'proto-comments:landing-review-73f5' : 'proto-comments:landing-demo';
-  // Production demo is ephemeral (comments vanish on refresh, never persist
-  // to GitHub) and uses friendlier pill copy. Preview branches use real
-  // server-backed comments since they're for actual review work.
-  // Video-demo branch: force '+ Comment' pill (default) instead of 'Try it here →'
+  const label = 'proto-comments:landing-demo';
+  // VIDEO-DEMO BRANCH: behave exactly like production demo (ephemeral, seeded
+  // pin on the H1) BUT with the default "+ Comment" pill instead of
+  // "Try it here →". So you can record the canonical experience.
   const pillLabel = undefined;
-  const ephemeral = isPreview ? undefined : 'true';
+  const ephemeral = 'true';
   // Seed pin on the H1 so visitors see a clickable example immediately.
-  const seed = isPreview ? undefined : JSON.stringify([
+  const seed = JSON.stringify([
     {
       id: '1',
       page_path: '/',
