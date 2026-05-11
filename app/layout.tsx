@@ -9,11 +9,13 @@ export const metadata: Metadata = {
     title: 'proto-comments',
     description: 'Pinned comments on any preview URL. Self-hosted. /proto-comments slash command for Claude Code.',
     type: 'website',
+    images: ['/og-image.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'proto-comments',
     description: 'Pinned comments on any preview URL. Self-hosted. No accounts.',
+    images: ['/og-image.png'],
   },
   icons: {
     icon: [
