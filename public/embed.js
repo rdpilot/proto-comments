@@ -865,7 +865,10 @@
       const body = c.body.split('\n').map((l, idx) => idx === 0 ? l : '   ' + l).join('\n');
       const who = c.author_name ? ` — ${c.author_name}` : '';
       lines.push(`${i + 1}. ${body}${who}`);
-      lines.push('   `' + c.selector + '` · ' + c.page_path);
+      // Same order as /proto-comments fetch: id · path · selector. Lines end
+      // with the backticked selector so a trailing "/" can't trigger Claude
+      // Code's slash menu when the markdown is pasted.
+      lines.push('   #' + c.id + ' · `' + c.page_path + '` · `' + c.selector + '`');
       lines.push('');
     });
     return lines.join('\n').trimEnd();
