@@ -123,7 +123,7 @@ User-facing body is between the meta closing \`-->\` and the footer sentinel. Fa
 # <project name> — N comments
 
 1. <body> — <author_name>
-   \`<selector>\` · \`<page_path>\` · #<issue_number>
+   #<issue_number> · \`<page_path>\` · \`<selector>\`
 
 2. ...
 \`\`\`
