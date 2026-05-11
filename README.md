@@ -140,6 +140,10 @@ Open http://localhost:3000.
 - **First comment fails to save:** the GitHub App needs `Issues: Read & write` on the chosen repo. Reinstall the App and confirm permissions.
 - **Pin appears in the wrong place after a redesign:** the embed falls back to text-snippet matching when the CSS selector breaks, but if the surrounding text has also changed, the pin won't find anything. Resolve and re-comment.
 
+## Star history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=rdpilot/proto-comments&type=Date)](https://star-history.com/#rdpilot/proto-comments&Date)
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
