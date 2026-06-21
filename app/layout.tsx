@@ -54,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
+        <Analytics />
         <script
           src={`https://proto-comments.vercel.app/embed.js?v=${sha}`}
           data-repo="rdpilot/proto-comments"
